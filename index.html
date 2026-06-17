@@ -63,6 +63,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tl-amt{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;flex-shrink:0}
 .tl-bal{font-size:11px;color:var(--muted);margin-top:4px}
 .chart-wrap{position:relative;height:180px;margin:4px 0}
+.trend-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.trend-btn{padding:9px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.trend-btn.active{background:var(--text);border-color:var(--text);color:#fff}
+.trend-chart-wrap{position:relative;height:280px;margin:4px 0}
+.trend-table{display:flex;flex-direction:column;gap:6px}
+.trend-row{display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.trend-row:last-child{border-bottom:none}
+.trend-head{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.trend-cell-num{font-family:'DM Mono',monospace;font-weight:600;text-align:right}
+.delta-up{color:var(--green)}.delta-down{color:var(--red)}.delta-flat{color:var(--muted)}
 .form-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
 .form-title{font-size:15px;font-weight:600;margin-bottom:14px;letter-spacing:-.3px}
 .field{margin-bottom:10px}
@@ -95,7 +105,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .rec-action.danger{background:var(--red-bg);color:var(--red);border-color:transparent}
 .rec-icon-actions{display:flex;gap:2px}
 .off-month-list{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
-@media(max-width:760px){.main{max-width:680px}.section,.section.wide{max-width:680px}.payments-board{grid-template-columns:1fr}.pay-col{padding:9px}}
+@media(max-width:760px){.main{max-width:680px}.section,.section.wide{max-width:680px}.payments-board{grid-template-columns:1fr}.pay-col{padding:9px}.trend-controls{grid-template-columns:1fr 1fr}.trend-row{grid-template-columns:1fr 1fr}.trend-row span:nth-child(3),.trend-row span:nth-child(4){display:none}.trend-chart-wrap{height:240px}}
 .format-example{background:var(--bg);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);margin:5px 0;border-left:3px solid var(--border-strong)}
 .format-example span{color:var(--text);font-weight:500}
 .tg-steps-card{background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-top:10px;border:1px solid var(--border)}
@@ -308,7 +318,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="field"><label>Mes</label><select id="i-mes"></select></div>
     <button class="submit-btn" onclick="addIngreso()">Registrar ingreso</button>
   </div>
-  <div class="card"><div class="card-header"><div class="card-title">Historial de ingresos</div></div><div id="lista-ingresos"><div class="empty">Sin ingresos registrados</div></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Historial de ingresos</div></div><div id="lista-ingresos"><div class="empty">Sin ingresos registrados</div></div></div>
+</div>
+
+<!-- TENDENCIAS -->
+<div class="section wide" id="sec-tendencias">
+  <div class="mes-row">
+    <div class="mes-label">Tendencias</div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Comparativo por periodo</div><div class="card-badge badge-blue" id="trend-range-label">Mes a mes</div></div>
+    <div class="trend-controls">
+      <button class="trend-btn" data-period="week" onclick="setTrendPeriod('week')">Semana</button>
+      <button class="trend-btn active" data-period="month" onclick="setTrendPeriod('month')">Mes</button>
+      <button class="trend-btn" data-period="quarter" onclick="setTrendPeriod('quarter')">Trimestre</button>
+      <button class="trend-btn" data-period="year" onclick="setTrendPeriod('year')">Año</button>
+    </div>
+    <div class="mes-row" style="margin:4px 0 12px">
+      <div class="mes-label" id="trend-period-label">—</div>
+      <div class="mes-nav">
+        <button class="mes-btn" onclick="changeTrendPeriod(-1)">‹</button>
+        <button class="mes-btn" onclick="resetTrendPeriod()">•</button>
+        <button class="mes-btn" onclick="changeTrendPeriod(1)">›</button>
+      </div>
+    </div>
+    <div class="budget-grid">
+      <div class="budget-mini"><div class="budget-mini-label">Balance actual</div><div class="budget-mini-value" id="trend-balance">$0</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Cambio vs anterior</div><div class="budget-mini-value" id="trend-delta">$0</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Tasa de gasto</div><div class="budget-mini-value a" id="trend-spend-rate">0%</div></div>
+    </div>
+    <div class="trend-chart-wrap"><canvas id="trendChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Detalle de periodos</div></div>
+    <div id="trend-table" class="trend-table"><div class="empty">Sin datos suficientes</div></div>
+  </div>
 </div>
 
 <!-- PAGOS -->
@@ -403,6 +447,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
     Ingresos
   </button>
+  <button class="nav-item" onclick="showSection('tendencias',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg>
+    Tend.
+  </button>
   <button class="nav-item" onclick="showSection('recs',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     Pagos
@@ -460,6 +508,9 @@ let sheetId=localStorage.getItem('fin_sheetId')||'';
 let scriptUrl=localStorage.getItem('fin_scriptUrl')||'';
 let apiToken=localStorage.getItem('fin_apiToken')||'';
 let barChartInst=null;
+let trendChartInst=null;
+let trendPeriod=localStorage.getItem('fin_trendPeriod')||'month';
+let trendCursor=new Date(localStorage.getItem('fin_trendCursor')||new Date(anioVista,mesVista,DIA_HOY).toISOString());
 
 function init(){
   poblarSelects();
@@ -515,6 +566,13 @@ function guardarMeta(){
 }
 
 function fmt(n){return '$'+Math.round(n).toLocaleString('es-MX');}
+function fmtCompact(n){
+  n=Number(n||0);
+  const abs=Math.abs(n);
+  if(abs>=1000000)return '$'+(n/1000000).toFixed(abs>=10000000?0:1)+'M';
+  if(abs>=1000)return '$'+(n/1000).toFixed(abs>=10000?0:1)+'k';
+  return fmt(n);
+}
 
 function cargarDemo(){
   ingresos=[
@@ -578,6 +636,7 @@ async function syncData(){
         monto: parseFloat(campo(g,'monto','Monto'))||0,
         dia: parseInt(campo(g,'día','dia','Día','Dia'))||null,
         mes: parseInt(campo(g,'mes','Mes'))||0,
+        anio: parseInt(campo(g,'anio','año','ano','Año','Ano'))||anioVista,
         tipo: String(campo(g,'tipo','Tipo')||'indispensable'),
         cat: String(campo(g,'cat','categoría','categoria','Categoría','Categoria')||'General'),
         origen: String(campo(g,'origen','Origen')||'sheet')
@@ -593,6 +652,7 @@ async function syncData(){
         monto: parseFloat(campo(i,'monto','Monto'))||0,
         dia: parseInt(campo(i,'día','dia','Día','Dia'))||null,
         mes: parseInt(campo(i,'mes','Mes'))||0,
+        anio: parseInt(campo(i,'anio','año','ano','Año','Ano'))||anioVista,
         origen: String(campo(i,'origen','Origen')||'sheet')
       }));
     }
@@ -634,11 +694,11 @@ function addGasto(){
   const cat=document.getElementById('g-cat').value;
   if(!desc||!monto){toast('Completa descripción y monto');return;}
   const id=Date.now();
-  gastos.push({id,desc,monto,dia,mes,tipo,cat,origen:'manual'});
+  gastos.push({id,desc,monto,dia,mes,anio:anioVista,tipo,cat,origen:'manual'});
   save();
   ['g-desc','g-monto','g-dia'].forEach(id=>document.getElementById(id).value='');
   render();toast('Gasto registrado');
-  if(scriptUrl)pushToSheet({tipo:'gasto',id,desc,monto,dia,mes,tipogasto:tipo,cat});
+  if(scriptUrl)pushToSheet({tipo:'gasto',id,desc,monto,dia,mes,anio:anioVista,tipogasto:tipo,cat});
 }
 
 function addIngreso(){
@@ -649,11 +709,11 @@ function addIngreso(){
   const mes=parseInt(document.getElementById('i-mes').value);
   if(!desc||!monto){toast('Completa descripción y monto');return;}
   const id=Date.now();
-  ingresos.push({id,desc,quien,monto,dia,mes,origen:'manual'});
+  ingresos.push({id,desc,quien,monto,dia,mes,anio:anioVista,origen:'manual'});
   save();
   ['i-desc','i-quien','i-monto','i-dia'].forEach(id=>document.getElementById(id).value='');
   render();toast('Ingreso registrado');
-  if(scriptUrl)pushToSheet({tipo:'ingreso',id,desc,quien,monto,dia,mes});
+  if(scriptUrl)pushToSheet({tipo:'ingreso',id,desc,quien,monto,dia,mes,anio:anioVista});
 }
 
 function addRec(){
@@ -715,7 +775,7 @@ async function pagarRec(id,checked){
   if(!ok){render();return;}
   const gastoId=Date.now();
   const dia=Math.min(DIA_HOY,31);
-  gastos.push({id:gastoId,desc:r.desc,monto:r.monto,dia,mes:mesVista,tipo:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
+  gastos.push({id:gastoId,desc:r.desc,monto:r.monto,dia,mes:mesVista,anio:anioVista,tipo:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
   r.pagadoMes=visibleMonthKey();
   r.apartadoMes='';
   r.gastoPagadoId=String(gastoId);
@@ -875,8 +935,29 @@ function render(){
   renderListaGastos();
   renderListaIngresos();
   renderListaRecs();
+  renderTrends();
   renderBudgetModel(iM,gM,tI,tG,budget);
   actualizarMeta(tI,tG);
+}
+
+function setTrendPeriod(period){
+  trendPeriod=period;
+  trendCursor=periodStartFor(trendCursor,trendPeriod);
+  localStorage.setItem('fin_trendPeriod',trendPeriod);
+  localStorage.setItem('fin_trendCursor',trendCursor.toISOString());
+  renderTrends();
+}
+
+function changeTrendPeriod(delta){
+  trendCursor=addPeriod(periodStartFor(trendCursor,trendPeriod),trendPeriod,delta);
+  localStorage.setItem('fin_trendCursor',trendCursor.toISOString());
+  renderTrends();
+}
+
+function resetTrendPeriod(){
+  trendCursor=periodStartFor(new Date(anioVista,mesVista,DIA_HOY),trendPeriod);
+  localStorage.setItem('fin_trendCursor',trendCursor.toISOString());
+  renderTrends();
 }
 
 function parseRecDate(r){
@@ -1039,6 +1120,141 @@ function renderBarChart(){
     data:{labels,datasets:[{label:'Ingresos',data:iData,backgroundColor:'#1D7D5A',borderRadius:4,borderSkipped:false},{label:'Gastos',data:gData,backgroundColor:'#C0392B',borderRadius:4,borderSkipped:false}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:12}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fmt(v),font:{family:'DM Mono',size:11}}}}}
   });
+}
+
+function recordDate(x){
+  const year=Number(x.anio||x.ano||anioVista);
+  const month=Number.isFinite(Number(x.mes))?Number(x.mes):mesVista;
+  const day=Math.min(Math.max(Number(x.dia||1),1),31);
+  const d=new Date(year,month,day);
+  return Number.isNaN(d.getTime())?new Date(anioVista,mesVista,1):d;
+}
+
+function startOfWeek(d){
+  const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const day=(x.getDay()+6)%7;
+  x.setDate(x.getDate()-day);
+  return new Date(x.getFullYear(),x.getMonth(),x.getDate());
+}
+
+function addPeriod(start,period,amount){
+  const d=new Date(start);
+  if(period==='week')d.setDate(d.getDate()+7*amount);
+  if(period==='month')d.setMonth(d.getMonth()+amount);
+  if(period==='quarter')d.setMonth(d.getMonth()+3*amount);
+  if(period==='year')d.setFullYear(d.getFullYear()+amount);
+  return d;
+}
+
+function periodStartFor(date,period){
+  if(period==='week')return startOfWeek(date);
+  if(period==='month')return new Date(date.getFullYear(),date.getMonth(),1);
+  if(period==='quarter')return new Date(date.getFullYear(),Math.floor(date.getMonth()/3)*3,1);
+  return new Date(date.getFullYear(),0,1);
+}
+
+function trendPeriods(period){
+  const count=period==='week'?10:period==='month'?12:period==='quarter'?8:5;
+  const current=periodStartFor(trendCursor,period);
+  const start=addPeriod(current,period,-count+1);
+  return Array.from({length:count},(_,i)=>{
+    const from=addPeriod(start,period,i);
+    const to=addPeriod(from,period,1);
+    return{from,to,label:periodLabel(from,period)};
+  });
+}
+
+function periodLabel(d,period){
+  if(period==='week'){
+    const end=new Date(d);end.setDate(end.getDate()+6);
+    return `${d.getDate()} ${MESES[d.getMonth()].slice(0,3)}-${end.getDate()} ${MESES[end.getMonth()].slice(0,3)}`;
+  }
+  if(period==='month')return `${MESES[d.getMonth()].slice(0,3)} ${String(d.getFullYear()).slice(2)}`;
+  if(period==='quarter')return `T${Math.floor(d.getMonth()/3)+1} ${d.getFullYear()}`;
+  return String(d.getFullYear());
+}
+
+function periodFullLabel(d,period){
+  if(period==='week'){
+    const end=new Date(d);end.setDate(end.getDate()+6);
+    return `Semana ${d.getDate()} ${MESES[d.getMonth()]} - ${end.getDate()} ${MESES[end.getMonth()]} ${end.getFullYear()}`;
+  }
+  if(period==='month')return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+  if(period==='quarter')return `Trimestre ${Math.floor(d.getMonth()/3)+1} · ${d.getFullYear()}`;
+  return `Año ${d.getFullYear()}`;
+}
+
+function aggregateTrend(period){
+  return trendPeriods(period).map(p=>{
+    const ingreso=ingresos.reduce((sum,x)=>{const d=recordDate(x);return d>=p.from&&d<p.to?sum+(x.monto||0):sum;},0);
+    const gasto=gastos.reduce((sum,x)=>{const d=recordDate(x);return d>=p.from&&d<p.to?sum+(x.monto||0):sum;},0);
+    return{...p,ingreso,gasto,balance:ingreso-gasto,rate:ingreso>0?Math.round(gasto/ingreso*100):0};
+  });
+}
+
+function deltaClass(value){return value>0?'delta-up':value<0?'delta-down':'delta-flat';}
+function fmtDelta(value){return (value>0?'+':'')+fmt(value);}
+const trendValueLabels={
+  id:'trendValueLabels',
+  afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    ctx.save();
+    ctx.font='10px "DM Mono", monospace';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    chart.data.datasets.forEach((dataset,datasetIndex)=>{
+      const meta=chart.getDatasetMeta(datasetIndex);
+      if(!meta||meta.hidden)return;
+      meta.data.forEach((point,index)=>{
+        const value=Number(dataset.data[index]||0);
+        if(!value)return;
+        const offset=datasetIndex===0?-14:datasetIndex===1?14:-26;
+        ctx.fillStyle=dataset.borderColor||'#1A1917';
+        ctx.fillText(fmtCompact(value),point.x,point.y+offset);
+      });
+    });
+    ctx.restore();
+  }
+};
+
+function renderTrends(){
+  const canvas=document.getElementById('trendChart');
+  if(!canvas)return;
+  document.querySelectorAll('.trend-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.period===trendPeriod));
+  const labelMap={week:'Semana a semana',month:'Mes a mes',quarter:'Trimestre a trimestre',year:'Año a año'};
+  setText('trend-range-label',labelMap[trendPeriod]||'Mes a mes');
+  const rows=aggregateTrend(trendPeriod);
+  const currentStart=periodStartFor(trendCursor,trendPeriod);
+  setText('trend-period-label',periodFullLabel(currentStart,trendPeriod));
+  const latest=rows[rows.length-1]||{ingreso:0,gasto:0,balance:0,rate:0};
+  const prev=rows[rows.length-2]||{balance:0};
+  const delta=latest.balance-prev.balance;
+  setText('trend-balance',fmt(latest.balance));
+  setClass('trend-balance','budget-mini-value '+(latest.balance>=0?'g':'r'));
+  setText('trend-delta',fmtDelta(delta));
+  setClass('trend-delta','budget-mini-value '+deltaClass(delta));
+  setText('trend-spend-rate',latest.rate+'%');
+  setClass('trend-spend-rate','budget-mini-value '+(latest.rate<=70?'g':latest.rate<=95?'a':'r'));
+
+  if(trendChartInst)trendChartInst.destroy();
+  trendChartInst=new Chart(canvas,{
+    type:'line',
+    data:{
+      labels:rows.map(r=>r.label),
+      datasets:[
+        {label:'Ingresos',data:rows.map(r=>r.ingreso),borderColor:'#1D7D5A',backgroundColor:'rgba(29,125,90,.08)',tension:.3,fill:false},
+        {label:'Gastos',data:rows.map(r=>r.gasto),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.08)',tension:.3,fill:false},
+        {label:'Balance',data:rows.map(r=>r.balance),borderColor:'#1D4ED8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,fill:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28,bottom:8,left:8,right:8}},plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:7,font:{family:'DM Sans',size:12}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11},maxRotation:0,autoSkip:true}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fmt(v),font:{family:'DM Mono',size:11}}}}},
+    plugins:[trendValueLabels]
+  });
+
+  const table=document.getElementById('trend-table');
+  if(!table)return;
+  table.innerHTML=`<div class="trend-row trend-head"><span>Periodo</span><span class="trend-cell-num">Ingresos</span><span class="trend-cell-num">Gastos</span><span class="trend-cell-num">Balance</span></div>`+
+    [...rows].reverse().map(r=>`<div class="trend-row"><span>${h(r.label)}</span><span class="trend-cell-num g">${fmt(r.ingreso)}</span><span class="trend-cell-num r">${fmt(r.gasto)}</span><span class="trend-cell-num ${r.balance>=0?'g':'r'}">${fmt(r.balance)}</span></div>`).join('');
 }
 
 function renderTimeline(iM,gM){
