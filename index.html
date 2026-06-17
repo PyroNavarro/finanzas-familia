@@ -431,8 +431,7 @@ body.auth-ok .access-screen{display:none}
   </div>
   <div class="card">
     <div class="card-header"><div class="card-title">Configuración</div></div>
-    <div class="info-box">Conecta tu Google Sheet para que los datos de Telegram aparezcan automáticamente en el dashboard.</div>
-    <div class="config-field"><label>ID de tu Google Sheet</label><input type="text" id="sheet-id" placeholder="17pgg3mwruTWm_Zj5cmyXXEfjKuihu8RIcD1JviSaKf0"/></div>
+    <div class="info-box">El Google Sheet ya está fijado en el código y el Apps Script también valida contra ese Sheet. Solo necesitas configurar el URL del Apps Script y el token privado.</div>
     <div class="config-field"><label>URL del Apps Script</label><input type="text" id="script-url" placeholder="https://script.google.com/macros/s/..."/></div>
     <div class="config-field"><label>Token de acceso</label><input type="password" id="api-token" placeholder="Pega aquí tu token privado"/></div>
     <button class="submit-btn" onclick="guardarConfig()">Guardar configuración</button>
@@ -440,7 +439,7 @@ body.auth-ok .access-screen{display:none}
   <div class="card">
     <div class="card-header"><div class="card-title">Instrucciones</div></div>
     <div style="font-size:13px;line-height:1.8;color:var(--muted)">
-      <p style="font-weight:600;color:var(--text)">Paso 1 — Google Sheet</p><p>Copia el ID de la URL de tu Sheet (la parte entre /d/ y /edit).</p><br>
+      <p style="font-weight:600;color:var(--text)">Paso 1 — Google Sheet</p><p>El Sheet familiar ya está configurado en el código y en Apps Script. No pegues IDs desde el navegador.</p><br>
       <p style="font-weight:600;color:var(--text)">Paso 2 — Apps Script</p><p>En el Sheet: Extensiones → Apps Script → pega el código → Implementar como Web App.</p><br>
       <p style="font-weight:600;color:var(--text)">Paso 3 — Make</p><p>Telegram Bot → Text Parser → Google Sheets. Ya está configurado y funcionando.</p><br>
       <p style="font-weight:600;color:var(--text)">Paso 4 — Vercel</p><p>Sube esta carpeta a GitHub y conéctala a Vercel para tener la app en tu celular.</p>
@@ -519,13 +518,13 @@ let mesVista=HOY.getMonth();
 let anioVista=HOY.getFullYear();
 const DIA_HOY=HOY.getDate();
 const BACKEND_VERSION='finanzas-familia-write-v5';
+const GOOGLE_SHEET_ID='17pgg3mwruTWm_Zj5cmyXXEfjKuihu8RIcD1JviSaKf0';
 const ACCESS_HASH='440ba2d6280a5594ffb23c805a0d1c3428c02896a2f8958b1d54f3350d080e00';
 
 let ingresos=JSON.parse(localStorage.getItem('fin_i')||'[]');
 let gastos=JSON.parse(localStorage.getItem('fin_g')||'[]');
 let recs=JSON.parse(localStorage.getItem('fin_r')||'[]');
 let metaGuardada=parseFloat(localStorage.getItem('fin_meta')||'0');
-let sheetId=localStorage.getItem('fin_sheetId')||'';
 let scriptUrl=localStorage.getItem('fin_scriptUrl')||'';
 let apiToken=localStorage.getItem('fin_apiToken')||'';
 let barChartInst=null;
@@ -535,8 +534,8 @@ let trendCursor=new Date(localStorage.getItem('fin_trendCursor')||new Date(anioV
 
 function init(){
   poblarSelects();
+  localStorage.removeItem('fin_sheetId');
   if(metaGuardada)document.getElementById('meta-input').value=metaGuardada;
-  if(sheetId)document.getElementById('sheet-id').value=sheetId;
   if(scriptUrl)document.getElementById('script-url').value=scriptUrl;
   if(apiToken)document.getElementById('api-token').value=apiToken;
   render();
@@ -608,10 +607,9 @@ function save(){
 }
 
 function guardarConfig(){
-  sheetId=document.getElementById('sheet-id').value.trim();
   scriptUrl=document.getElementById('script-url').value.trim();
   apiToken=document.getElementById('api-token').value.trim();
-  localStorage.setItem('fin_sheetId',sheetId);
+  localStorage.removeItem('fin_sheetId');
   localStorage.setItem('fin_scriptUrl',scriptUrl);
   localStorage.setItem('fin_apiToken',apiToken);
   toast('Configuración guardada');
