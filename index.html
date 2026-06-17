@@ -10,6 +10,13 @@
 :root{--bg:#F7F5F0;--surface:#fff;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.14);--text:#1A1917;--muted:#6B6860;--green:#1D7D5A;--green-bg:#EBF7F2;--red:#C0392B;--red-bg:#FDECEA;--amber:#B45309;--amber-bg:#FEF3C7;--blue:#1D4ED8;--blue-bg:#EFF6FF;--tg:#2AABEE;--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.06)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+body:not(.auth-ok) .topbar,body:not(.auth-ok) .main,body:not(.auth-ok) .bottom-nav{display:none}
+.access-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+body.auth-ok .access-screen{display:none}
+.access-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.access-title{font-size:20px;font-weight:700;letter-spacing:-.5px;margin-bottom:5px}
+.access-sub{font-size:13px;color:var(--muted);line-height:1.45;margin-bottom:18px}
+.access-error{min-height:18px;margin-top:10px;font-size:12px;color:var(--red);font-weight:600}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .logo{font-weight:600;font-size:16px;letter-spacing:-.3px}.logo span{color:var(--muted);font-weight:400}
 .sync-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid var(--border-strong);background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s}
@@ -147,6 +154,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </style>
 </head>
 <body>
+
+<div class="access-screen" id="access-screen">
+  <form class="access-card" onsubmit="unlockApp(event)">
+    <div class="access-title">Finanzas familia</div>
+    <div class="access-sub">Ingresa la contraseña para abrir el dashboard en esta sesión.</div>
+    <div class="field">
+      <label for="access-pass">Contraseña</label>
+      <input id="access-pass" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••••" autofocus>
+    </div>
+    <button class="submit-btn" type="submit">Entrar</button>
+    <div class="access-error" id="access-error" aria-live="polite"></div>
+  </form>
+</div>
 
 <div class="topbar">
   <div class="logo">Finanzas <span>familia</span></div>
@@ -499,6 +519,7 @@ let mesVista=HOY.getMonth();
 let anioVista=HOY.getFullYear();
 const DIA_HOY=HOY.getDate();
 const BACKEND_VERSION='finanzas-familia-write-v5';
+const ACCESS_HASH='440ba2d6280a5594ffb23c805a0d1c3428c02896a2f8958b1d54f3350d080e00';
 
 let ingresos=JSON.parse(localStorage.getItem('fin_i')||'[]');
 let gastos=JSON.parse(localStorage.getItem('fin_g')||'[]');
@@ -519,6 +540,43 @@ function init(){
   if(scriptUrl)document.getElementById('script-url').value=scriptUrl;
   if(apiToken)document.getElementById('api-token').value=apiToken;
   render();
+}
+
+async function sha256Hex(text){
+  const bytes=new TextEncoder().encode(text);
+  const hash=await crypto.subtle.digest('SHA-256',bytes);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlockApp(event){
+  event.preventDefault();
+  const input=document.getElementById('access-pass');
+  const error=document.getElementById('access-error');
+  const candidate=input.value.trim();
+  if(!candidate){error.textContent='Escribe la contraseña';return;}
+  const hash=await sha256Hex(candidate);
+  if(hash!==ACCESS_HASH){
+    error.textContent='Contraseña incorrecta';
+    input.value='';
+    input.focus();
+    return;
+  }
+  sessionStorage.setItem('fin_auth_ok','1');
+  startApp();
+}
+
+function startApp(){
+  document.body.classList.add('auth-ok');
+  if(!window.__finanzasStarted){
+    window.__finanzasStarted=true;
+    init();
+  }
+}
+
+function bootAuth(){
+  if(sessionStorage.getItem('fin_auth_ok')==='1'){startApp();return;}
+  document.body.classList.remove('auth-ok');
+  setTimeout(()=>document.getElementById('access-pass')?.focus(),0);
 }
 
 function poblarSelects(){
@@ -1387,7 +1445,7 @@ function actualizarMeta(tI,tG){
 
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 
-init();
+bootAuth();
 </script>
 </body>
 </html>
