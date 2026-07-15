@@ -75,7 +75,7 @@ body.auth-ok .access-screen{display:none}
 .trend-btn.active{background:var(--text);border-color:var(--text);color:#fff}
 .trend-chart-wrap{position:relative;height:280px;margin:4px 0}
 .trend-table{display:flex;flex-direction:column;gap:6px}
-.trend-row{display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.trend-row{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
 .trend-row:last-child{border-bottom:none}
 .trend-head{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
 .trend-cell-num{font-family:'DM Mono',monospace;font-weight:600;text-align:right}
@@ -112,7 +112,7 @@ body.auth-ok .access-screen{display:none}
 .rec-action.danger{background:var(--red-bg);color:var(--red);border-color:transparent}
 .rec-icon-actions{display:flex;gap:2px}
 .off-month-list{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
-@media(max-width:760px){.main{max-width:680px}.section,.section.wide{max-width:680px}.payments-board{grid-template-columns:1fr}.pay-col{padding:9px}.trend-controls{grid-template-columns:1fr 1fr}.trend-row{grid-template-columns:1fr 1fr}.trend-row span:nth-child(3),.trend-row span:nth-child(4){display:none}.trend-chart-wrap{height:240px}}
+@media(max-width:760px){.main{max-width:680px}.section,.section.wide{max-width:680px}.payments-board{grid-template-columns:1fr}.pay-col{padding:9px}.trend-controls{grid-template-columns:1fr 1fr}.trend-row{grid-template-columns:1fr 1fr}.trend-row span:nth-child(3),.trend-row span:nth-child(4),.trend-row span:nth-child(5){display:none}.trend-chart-wrap{height:240px}.income-pay-summary{grid-template-columns:1fr}}
 .format-example{background:var(--bg);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);margin:5px 0;border-left:3px solid var(--border-strong)}
 .format-example span{color:var(--text);font-weight:500}
 .tg-steps-card{background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-top:10px;border:1px solid var(--border)}
@@ -135,6 +135,16 @@ body.auth-ok .access-screen{display:none}
 .modal-actions{display:flex;gap:8px;margin-top:14px}
 .modal-save{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--text);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer}
 .modal-del{padding:12px 16px;border-radius:var(--radius-sm);background:var(--red-bg);color:var(--red);border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.income-pay-box{border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);padding:12px;margin-top:10px}
+.income-pay-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.income-pay-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.income-pay-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px}
+.income-pay-stat span{display:block;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.income-pay-stat strong{font-family:'DM Mono',monospace;font-size:13px}
+.income-pay-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.income-pay-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px}
+.income-pay-row:first-child{border-top:none}
+.mini-del{border:none;background:var(--red-bg);color:var(--red);border-radius:7px;padding:4px 7px;font-size:11px;font-weight:700;cursor:pointer}
 .config-field{margin-bottom:12px}
 .config-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
 .config-field input{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none}
@@ -188,10 +198,10 @@ body.auth-ok .access-screen{display:none}
     </div>
   </div>
   <div class="grid4">
-    <div class="metric"><div class="metric-label">Ingresos</div><div class="metric-value g" id="d-ing">$0</div></div>
+    <div class="metric"><div class="metric-label">Ingresos recibidos</div><div class="metric-value g" id="d-ing">$0</div></div>
     <div class="metric"><div class="metric-label">Gastos</div><div class="metric-value r" id="d-gasto">$0</div></div>
-    <div class="metric"><div class="metric-label">Balance</div><div class="metric-value" id="d-bal">$0</div></div>
-    <div class="metric"><div class="metric-label">% Disponible</div><div class="metric-value a" id="d-pct">0%</div></div>
+    <div class="metric"><div class="metric-label">Balance real</div><div class="metric-value" id="d-bal">$0</div></div>
+    <div class="metric"><div class="metric-label">% real</div><div class="metric-value a" id="d-pct">0%</div></div>
   </div>
   <div class="card">
     <div class="card-header"><div class="card-title">Resumen mensual proyectado</div><div class="card-badge badge-blue">Nuevo modelo</div></div>
@@ -231,7 +241,7 @@ body.auth-ok .access-screen{display:none}
   <div class="card"><div class="card-header"><div class="card-title">Próximos vencimientos</div></div><div id="d-prox"><div class="empty">Sin eventos próximos</div></div></div>
   <div class="card">
     <div class="card-header"><div class="card-title">Últimos 6 meses</div></div>
-    <div style="display:flex;gap:14px;margin-bottom:10px;font-size:12px"><span><span class="seg-dot" style="background:var(--green)"></span>Ingresos</span><span><span class="seg-dot" style="background:var(--red)"></span>Gastos</span></div>
+    <div style="display:flex;gap:14px;margin-bottom:10px;font-size:12px;flex-wrap:wrap"><span><span class="seg-dot" style="background:var(--green)"></span>Recibidos</span><span><span class="seg-dot" style="background:var(--blue)"></span>Esperados</span><span><span class="seg-dot" style="background:var(--red)"></span>Gastos</span></div>
     <div class="chart-wrap"><canvas id="barChart"></canvas></div>
   </div>
 </div>
@@ -251,7 +261,8 @@ body.auth-ok .access-screen{display:none}
   </div>
   <div class="card">
     <div style="display:flex;gap:14px;margin-bottom:14px;font-size:12px">
-      <span><span class="seg-dot" style="background:var(--green)"></span>Ingreso</span>
+      <span><span class="seg-dot" style="background:var(--green)"></span>Ingreso recibido</span>
+      <span><span class="seg-dot" style="background:var(--blue)"></span>Por recibir</span>
       <span><span class="seg-dot" style="background:var(--red)"></span>Indispensable</span>
       <span><span class="seg-dot" style="background:var(--amber)"></span>No indispensable</span>
     </div>
@@ -312,6 +323,15 @@ body.auth-ok .access-screen{display:none}
     </div>
     <div class="budget-note" id="income-summary-note">Los ingresos por recibir ayudan a proyectar pagos futuros, pero el colchón inmediato se calcula con lo que ya entró.</div>
   </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">Estado de cobro</div><div class="card-badge badge-blue" id="income-status-badge">—</div></div>
+    <div class="budget-grid">
+      <div class="budget-mini"><div class="budget-mini-label">Cobros recibidos</div><div class="budget-mini-value g" id="income-status-ready">$0</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Cobros pendientes</div><div class="budget-mini-value b" id="income-status-waiting">$0</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Regla usada</div><div class="budget-mini-value a" id="income-status-rule">Manual</div></div>
+    </div>
+    <div class="budget-note" id="income-status-note">Marca manualmente cada ingreso cuando el dinero ya haya llegado.</div>
+  </div>
   <!-- Mini guía Telegram -->
   <div class="card" style="border-left:3px solid var(--tg)">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -363,9 +383,9 @@ body.auth-ok .access-screen{display:none}
       </div>
     </div>
     <div class="budget-grid">
-      <div class="budget-mini"><div class="budget-mini-label">Balance actual</div><div class="budget-mini-value" id="trend-balance">$0</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Balance real</div><div class="budget-mini-value" id="trend-balance">$0</div></div>
       <div class="budget-mini"><div class="budget-mini-label">Cambio vs anterior</div><div class="budget-mini-value" id="trend-delta">$0</div></div>
-      <div class="budget-mini"><div class="budget-mini-label">Tasa de gasto</div><div class="budget-mini-value a" id="trend-spend-rate">0%</div></div>
+      <div class="budget-mini"><div class="budget-mini-label">Tasa gasto real</div><div class="budget-mini-value a" id="trend-spend-rate">0%</div></div>
     </div>
     <div class="trend-chart-wrap"><canvas id="trendChart"></canvas></div>
   </div>
@@ -495,6 +515,23 @@ body.auth-ok .access-screen{display:none}
       <div class="modal-row2"><div class="modal-field"><label>Descripción</label><input type="text" id="ei-desc"/></div><div class="modal-field"><label>¿Quién?</label><input type="text" id="ei-quien"/></div></div>
       <div class="modal-row2"><div class="modal-field"><label>Monto</label><input type="number" id="ei-monto"/></div><div class="modal-field"><label>Día que entra</label><input type="number" id="ei-dia" min="1" max="31"/></div></div>
       <div class="modal-field"><label>Mes</label><select id="ei-mes"></select></div>
+      <div class="income-pay-box">
+        <div class="income-pay-title">Pagos parciales</div>
+        <div class="income-pay-summary">
+          <div class="income-pay-stat"><span>Esperado</span><strong id="ei-expected">$0</strong></div>
+          <div class="income-pay-stat"><span>Recibido</span><strong class="g" id="ei-received">$0</strong></div>
+          <div class="income-pay-stat"><span>Pendiente</span><strong class="b" id="ei-pending">$0</strong></div>
+        </div>
+        <div class="modal-row2">
+          <div class="modal-field"><label>Abono recibido</label><input type="number" id="ei-pay-monto" placeholder="0.00"/></div>
+          <div class="modal-field"><label>Nota</label><input type="text" id="ei-pay-nota" placeholder="Ej: transferencia"/></div>
+        </div>
+        <div class="inline-actions">
+          <button class="secondary-btn" type="button" onclick="agregarAbonoIngresoModal()">Agregar abono</button>
+          <button class="secondary-btn" type="button" onclick="completarIngresoModal()">Completar pendiente</button>
+        </div>
+        <div class="income-pay-list" id="ei-pay-list"><div class="empty">Sin abonos registrados</div></div>
+      </div>
     </div>
     <div id="modal-rec" style="display:none">
       <div class="modal-field"><label>Descripción</label><input type="text" id="er-desc"/></div>
@@ -517,13 +554,14 @@ const HOY=new Date();
 let mesVista=HOY.getMonth();
 let anioVista=HOY.getFullYear();
 const DIA_HOY=HOY.getDate();
-const BACKEND_VERSION='finanzas-familia-write-v5';
+const BACKEND_VERSION='finanzas-familia-write-v7';
 const GOOGLE_SHEET_ID='17pgg3mwruTWm_Zj5cmyXXEfjKuihu8RIcD1JviSaKf0';
 const ACCESS_HASH='440ba2d6280a5594ffb23c805a0d1c3428c02896a2f8958b1d54f3350d080e00';
 
 let ingresos=JSON.parse(localStorage.getItem('fin_i')||'[]');
 let gastos=JSON.parse(localStorage.getItem('fin_g')||'[]');
 let recs=JSON.parse(localStorage.getItem('fin_r')||'[]');
+let abonosIngresos=JSON.parse(localStorage.getItem('fin_ai')||'[]');
 let metaGuardada=parseFloat(localStorage.getItem('fin_meta')||'0');
 let scriptUrl=localStorage.getItem('fin_scriptUrl')||'';
 let apiToken=localStorage.getItem('fin_apiToken')||'';
@@ -604,6 +642,7 @@ function save(){
   localStorage.setItem('fin_i',JSON.stringify(ingresos));
   localStorage.setItem('fin_g',JSON.stringify(gastos));
   localStorage.setItem('fin_r',JSON.stringify(recs));
+  localStorage.setItem('fin_ai',JSON.stringify(abonosIngresos));
 }
 
 function guardarConfig(){
@@ -709,6 +748,7 @@ async function syncData(){
         dia: parseInt(campo(i,'día','dia','Día','Dia'))||null,
         mes: parseInt(campo(i,'mes','Mes'))||0,
         anio: parseInt(campo(i,'anio','año','ano','Año','Ano'))||anioVista,
+        recibidoMes: String(campo(i,'recibidoMes','RecibidoMes','recibido','Recibido')||''),
         origen: String(campo(i,'origen','Origen')||'sheet')
       }));
     }
@@ -730,8 +770,23 @@ async function syncData(){
       }));
     }
 
+    if(Array.isArray(data.abonosIngresos)){
+      abonosIngresos=data.abonosIngresos.map((a,idx)=>({
+        id: parseInt(campo(a,'id'))||Date.now()+idx,
+        sheetId: String(campo(a,'id','ID','Id')||''),
+        ingresoId: String(campo(a,'ingresoId','IngresoID','IngresoId','ingresoID')||''),
+        fecha: String(campo(a,'fecha','Fecha')||''),
+        monto: parseFloat(campo(a,'monto','Monto'))||0,
+        dia: parseInt(campo(a,'día','dia','Día','Dia'))||null,
+        mes: parseInt(campo(a,'mes','Mes'))||0,
+        anio: parseInt(campo(a,'anio','año','ano','Año','Ano'))||anioVista,
+        nota: String(campo(a,'nota','Nota','notas','Notas')||''),
+        origen: String(campo(a,'origen','Origen')||'sheet')
+      }));
+    }
+
     save();render();
-    toast(`✅ ${gastos.length} gastos · ${ingresos.length} ingresos · ${recs.length} recordatorios`);
+    toast(`✅ ${gastos.length} gastos · ${ingresos.length} ingresos · ${recs.length} recordatorios · ${abonosIngresos.length} abonos`);
   }catch(e){
     console.error(e);
     toast('Error al sincronizar');
@@ -765,11 +820,11 @@ function addIngreso(){
   const mes=parseInt(document.getElementById('i-mes').value);
   if(!desc||!monto){toast('Completa descripción y monto');return;}
   const id=Date.now();
-  ingresos.push({id,desc,quien,monto,dia,mes,anio:anioVista,origen:'manual'});
+  ingresos.push({id,desc,quien,monto,dia,mes,anio:anioVista,recibidoMes:'',origen:'manual'});
   save();
   ['i-desc','i-quien','i-monto','i-dia'].forEach(id=>document.getElementById(id).value='');
   render();toast('Ingreso registrado');
-  if(scriptUrl)pushToSheet({tipo:'ingreso',id,desc,quien,monto,dia,mes,anio:anioVista});
+  if(scriptUrl)pushToSheet({tipo:'ingreso',id,desc,quien,monto,dia,mes,anio:anioVista,recibidoMes:''});
 }
 
 function addRec(){
@@ -794,9 +849,65 @@ function delGasto(id){
 }
 function delIngreso(id){
   const item=ingresos.find(x=>x.id===id);
+  const related=item?incomeAbonos(item):[];
   ingresos=ingresos.filter(x=>x.id!==id);save();render();
+  if(item)abonosIngresos=abonosIngresos.filter(a=>String(a.ingresoId||'')!==incomeKey(item));
+  save();render();
   if(scriptUrl&&item)pushToSheet({action:'delete',tipo:'ingreso',id:item.sheetId||item.id});
+  if(scriptUrl)related.forEach(a=>pushToSheet({action:'delete',tipo:'abonoIngreso',id:a.sheetId||a.id}));
 }
+
+async function toggleIngresoRecibido(id,checked){
+  const i=ingresos.find(x=>x.id===id);if(!i)return;
+  if(checked){
+    const pending=incomePendingAmount(i);
+    if(pending<=0){toast('Ingreso ya completo');return;}
+    await agregarAbonoIngreso(i,pending,'completo');
+    toast('Ingreso completado');
+    return;
+  }
+  const related=incomeAbonos(i);
+  abonosIngresos=abonosIngresos.filter(a=>String(a.ingresoId||'')!==incomeKey(i));
+  i.recibidoMes='';
+  save();render();
+  if(scriptUrl){
+    for(const a of related)await pushToSheet({action:'delete',tipo:'abonoIngreso',id:a.sheetId||a.id});
+    await pushToSheet({action:'update',tipo:'ingreso',id:i.sheetId||i.id,recibidoMes:''});
+  }
+  toast('Cobros del ingreso eliminados');
+}
+
+async function agregarAbonoIngreso(i,monto,nota=''){
+  const cleanMonto=Math.max(0,Math.min(Number(monto)||0,incomePendingAmount(i)));
+  if(cleanMonto<=0)return false;
+  const id=Date.now();
+  const abono={id,ingresoId:incomeKey(i),fecha:new Date().toISOString(),monto:cleanMonto,dia:DIA_HOY,mes:HOY.getMonth(),anio:HOY.getFullYear(),nota,origen:'manual'};
+  abonosIngresos.push(abono);
+  i.recibidoMes=incomeAbonosAmount(i)>=(Number(i.monto)||0)?incomeMonthKey(i):'';
+  save();render();
+  if(modalId===i.id)renderIngresoPagosModal(i);
+  if(scriptUrl){
+    const ok=await pushToSheet({tipo:'abonoIngreso',id,ingresoId:abono.ingresoId,fecha:abono.fecha,monto:cleanMonto,dia:abono.dia,mes:abono.mes,anio:abono.anio,nota,origen:'manual'});
+    await pushToSheet({action:'update',tipo:'ingreso',id:i.sheetId||i.id,recibidoMes:i.recibidoMes||''});
+    return ok;
+  }
+  return true;
+}
+
+async function borrarAbonoIngreso(id){
+  const abono=abonosIngresos.find(a=>Number(a.id)===Number(id));if(!abono)return;
+  const ingreso=ingresos.find(i=>incomeKey(i)===String(abono.ingresoId||''));
+  abonosIngresos=abonosIngresos.filter(a=>Number(a.id)!==Number(id));
+  if(ingreso)ingreso.recibidoMes=incomeAbonosAmount(ingreso)>=(Number(ingreso.monto)||0)?incomeMonthKey(ingreso):'';
+  save();render();
+  if(ingreso&&modalId===ingreso.id)renderIngresoPagosModal(ingreso);
+  if(scriptUrl){
+    await pushToSheet({action:'delete',tipo:'abonoIngreso',id:abono.sheetId||abono.id});
+    if(ingreso)await pushToSheet({action:'update',tipo:'ingreso',id:ingreso.sheetId||ingreso.id,recibidoMes:ingreso.recibidoMes||''});
+  }
+  toast('Abono eliminado');
+}
+
 function delRec(id){
   const item=recs.find(x=>x.id===id);
   recs=recs.filter(x=>x.id!==id);save();render();
@@ -910,6 +1021,9 @@ function abrirEditIngreso(id){
   document.getElementById('ei-monto').value=x.monto;
   document.getElementById('ei-dia').value=x.dia||'';
   document.getElementById('ei-mes').value=x.mes;
+  document.getElementById('ei-pay-monto').value='';
+  document.getElementById('ei-pay-nota').value='';
+  renderIngresoPagosModal(x);
   document.getElementById('modal-titulo').textContent='Editar ingreso';
   document.getElementById('modal-gasto').style.display='none';
   document.getElementById('modal-ingreso').style.display='block';
@@ -917,6 +1031,49 @@ function abrirEditIngreso(id){
   document.getElementById('modal-save-btn').onclick=guardarIngreso;
   document.getElementById('modal-del-btn').onclick=()=>{delIngreso(id);closeModal();};
   document.getElementById('modal').classList.add('open');
+}
+
+function renderIngresoPagosModal(x){
+  const expected=Number(x.monto)||0;
+  const received=incomeReceivedAmount(x);
+  const pending=incomePendingAmount(x);
+  setText('ei-expected',fmt(expected));
+  setText('ei-received',fmt(received));
+  setText('ei-pending',fmt(pending));
+  const list=document.getElementById('ei-pay-list');
+  if(!list)return;
+  const abonos=[...incomeAbonos(x)].sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+  if(!abonos.length){list.innerHTML='<div class="empty">Sin abonos registrados</div>';return;}
+  list.innerHTML=abonos.map(a=>{
+    const id=Number(a.id)||0;
+    const date=a.fecha?new Date(a.fecha):null;
+    const label=date&&!Number.isNaN(date.getTime())?`${date.getDate()} ${MESES[date.getMonth()]}`:`Día ${a.dia||'—'}`;
+    return`<div class="income-pay-row"><span>${h(label)}${a.nota?' · '+h(a.nota):''}</span><strong class="g">${fmt(a.monto)}</strong><button class="mini-del" onclick="borrarAbonoIngreso(${id})">Eliminar</button></div>`;
+  }).join('');
+}
+
+async function agregarAbonoIngresoModal(){
+  const i=ingresos.find(x=>x.id===modalId);if(!i)return;
+  const monto=parseFloat(document.getElementById('ei-pay-monto').value)||0;
+  const nota=document.getElementById('ei-pay-nota').value.trim();
+  if(monto<=0){toast('Escribe el monto del abono');return;}
+  const ok=await agregarAbonoIngreso(i,monto,nota);
+  if(ok){
+    document.getElementById('ei-pay-monto').value='';
+    document.getElementById('ei-pay-nota').value='';
+    renderIngresoPagosModal(i);
+    toast('Abono registrado');
+  }else{
+    toast('No se pudo registrar el abono');
+  }
+}
+
+async function completarIngresoModal(){
+  const i=ingresos.find(x=>x.id===modalId);if(!i)return;
+  const pending=incomePendingAmount(i);
+  if(pending<=0){toast('Ingreso ya completo');return;}
+  const ok=await agregarAbonoIngreso(i,pending,'completo');
+  if(ok){renderIngresoPagosModal(i);toast('Ingreso completado');}
 }
 
 function abrirEditRec(id){
@@ -947,9 +1104,10 @@ async function guardarGasto(){
 async function guardarIngreso(){
   const idx=ingresos.findIndex(x=>x.id===modalId);if(idx<0)return;
   ingresos[idx]={...ingresos[idx],desc:document.getElementById('ei-desc').value.trim(),quien:document.getElementById('ei-quien').value.trim(),monto:parseFloat(document.getElementById('ei-monto').value)||0,dia:parseInt(document.getElementById('ei-dia').value)||null,mes:parseInt(document.getElementById('ei-mes').value)};
+  ingresos[idx].recibidoMes=incomeIsReceived(ingresos[idx])?incomeMonthKey(ingresos[idx]):'';
   save();closeModal();render();toast('Ingreso actualizado');
   const i=ingresos[idx];
-  if(scriptUrl)await pushToSheet({action:'update',tipo:'ingreso',id:i.sheetId||i.id,desc:i.desc,quien:i.quien,monto:i.monto,dia:i.dia,mes:i.mes,anio:anioVista,origen:i.origen||'manual'});
+  if(scriptUrl)await pushToSheet({action:'update',tipo:'ingreso',id:i.sheetId||i.id,desc:i.desc,quien:i.quien,monto:i.monto,dia:i.dia,mes:i.mes,anio:anioVista,origen:i.origen||'manual',recibidoMes:i.recibidoMes||''});
 }
 
 async function guardarRec(){
@@ -965,25 +1123,27 @@ function cerrarModal(e){if(e.target===document.getElementById('modal'))closeModa
 
 // ── RENDER ───────────────────────────────────────────────
 function render(){
-  const iM=ingresos.filter(x=>x.mes===mesVista);
-  const gM=gastos.filter(x=>x.mes===mesVista);
+  const iM=ingresos.filter(itemIsVisibleMonth);
+  const gM=gastos.filter(itemIsVisibleMonth);
   const tI=iM.reduce((a,x)=>a+x.monto,0);
+  const receivedIncome=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
   const tG=gM.reduce((a,x)=>a+x.monto,0);
-  const bal=tI-tG;
+  const bal=receivedIncome-tG;
   const budget=getBudgetModel(iM,gM,tI,tG);
-  const pct=tI>0?Math.round((budget.projected/tI)*100):0;
+  const realPct=receivedIncome>0?Math.round((bal/receivedIncome)*100):(bal<0?-100:0);
+  const projectedPct=tI>0?Math.round((budget.projected/tI)*100):0;
 
   const mesStr=MESES[mesVista]+' '+anioVista;
   document.getElementById('mes-label').textContent=mesStr;
   if(document.getElementById('flujo-mes-label'))document.getElementById('flujo-mes-label').textContent='Flujo — '+mesStr;
 
-  document.getElementById('d-ing').textContent=fmt(tI);
+  document.getElementById('d-ing').textContent=fmt(receivedIncome);
   document.getElementById('d-gasto').textContent=fmt(tG);
   const bEl=document.getElementById('d-bal');bEl.textContent=fmt(bal);bEl.className='metric-value '+(bal>=0?'g':'r');
-  document.getElementById('d-pct').textContent=pct+'%';
-  document.getElementById('d-pct').className='metric-value '+(pct>=20?'g':pct>=0?'a':'r');
+  document.getElementById('d-pct').textContent=realPct+'%';
+  document.getElementById('d-pct').className='metric-value '+(realPct>=20?'g':realPct>=0?'a':'r');
 
-  renderHealth(pct,gM,budget);
+  renderHealth(projectedPct,gM,budget);
   renderProx();
   renderBarChart();
   renderTimeline(iM,gM);
@@ -993,7 +1153,7 @@ function render(){
   renderListaRecs();
   renderTrends();
   renderBudgetModel(iM,gM,tI,tG,budget);
-  actualizarMeta(tI,tG);
+  actualizarMeta(receivedIncome,tG);
 }
 
 function setTrendPeriod(period){
@@ -1050,6 +1210,35 @@ function visibleMonthKey(){
   return anioVista+'-'+String(mesVista+1).padStart(2,'0');
 }
 
+function incomeMonthKey(i){
+  const year=Number(i.anio||i.ano||anioVista);
+  const month=Number.isFinite(Number(i.mes))?Number(i.mes):mesVista;
+  return year+'-'+String(month+1).padStart(2,'0');
+}
+
+function incomeKey(i){
+  return String(i.sheetId||i.id||'');
+}
+
+function incomeAbonos(i){
+  const key=incomeKey(i);
+  return abonosIngresos.filter(a=>String(a.ingresoId||'')===key);
+}
+
+function incomeAbonosAmount(i){
+  return incomeAbonos(i).reduce((sum,a)=>sum+(Number(a.monto)||0),0);
+}
+
+function incomeReceivedAmount(i){
+  const paid=incomeAbonosAmount(i);
+  if(paid>0)return Math.min(Number(i.monto)||0,paid);
+  return String(i.recibidoMes||'')===incomeMonthKey(i)?Number(i.monto||0):0;
+}
+
+function incomePendingAmount(i){
+  return Math.max(0,(Number(i.monto)||0)-incomeReceivedAmount(i));
+}
+
 function recIsApartado(r){
   return String(r.apartadoMes||'')===visibleMonthKey();
 }
@@ -1062,6 +1251,14 @@ function pendingRecsForVisibleMonth(){
   return recsForVisibleMonth().filter(r=>!recIsPagado(r));
 }
 
+function incomeIsReceived(i){
+  return incomePendingAmount(i)<=0&&Number(i.monto||0)>0;
+}
+
+function itemIsVisibleMonth(x){
+  return Number(x.mes)===mesVista&&Number(x.anio||anioVista)===anioVista;
+}
+
 function getBudgetModel(iM,gM,tI,tG){
   const visibleRecs=pendingRecsForVisibleMonth();
   const allVisibleRecs=recsForVisibleMonth();
@@ -1069,14 +1266,14 @@ function getBudgetModel(iM,gM,tI,tG){
   const apartadoTotal=visibleRecs.filter(recIsApartado).reduce((a,x)=>a+(x.monto||0),0);
   const variableTotal=gM.reduce((a,x)=>a+(x.monto||0),0);
   const projected=tI-fixedTotal-variableTotal;
-  const nextIncome=iM.filter(i=>i.dia&&i.dia>DIA_HOY).sort((a,b)=>a.dia-b.dia)[0]||null;
+  const nextIncome=iM.filter(i=>i.dia&&!incomeIsReceived(i)).sort((a,b)=>a.dia-b.dia)[0]||null;
   const fixedBeforeIncome=visibleRecs
     .filter(r=>r.dia>=DIA_HOY&&(!nextIncome||r.dia<nextIncome.dia))
     .reduce((a,x)=>a+(x.monto||0),0);
   const variableBeforeIncome=gM
     .filter(g=>g.dia>=DIA_HOY&&(!nextIncome||g.dia<nextIncome.dia))
     .reduce((a,x)=>a+(x.monto||0),0);
-  const incomeUntilNow=iM.filter(i=>!i.dia||i.dia<=DIA_HOY).reduce((a,x)=>a+(x.monto||0),0);
+  const incomeUntilNow=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
   const spentUntilNow=gM.filter(g=>!g.dia||g.dia<=DIA_HOY).reduce((a,x)=>a+(x.monto||0),0);
   const cashBeforeIncome=incomeUntilNow-spentUntilNow-variableBeforeIncome;
   const cushion=cashBeforeIncome-fixedBeforeIncome;
@@ -1085,7 +1282,10 @@ function getBudgetModel(iM,gM,tI,tG){
 
 function renderBudgetModel(iM,gM,tI,tG,model){
   const m=model||getBudgetModel(iM,gM,tI,tG);
-  const incomeReceived=iM.filter(i=>!i.dia||i.dia<=DIA_HOY).reduce((a,x)=>a+(x.monto||0),0);
+  const receivedItems=iM.filter(i=>incomeReceivedAmount(i)>0);
+  const pendingItems=iM.filter(i=>incomePendingAmount(i)>0);
+  const completeItems=iM.filter(incomeIsReceived);
+  const incomeReceived=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
   const incomePending=Math.max(0,tI-incomeReceived);
   const essential=gM.filter(g=>g.tipo==='indispensable').reduce((a,x)=>a+(x.monto||0),0);
   const nonEssential=gM.filter(g=>g.tipo==='no_indispensable').reduce((a,x)=>a+(x.monto||0),0);
@@ -1117,6 +1317,13 @@ function renderBudgetModel(iM,gM,tI,tG,model){
   setText('income-received',fmt(incomeReceived));
   setText('income-pending',fmt(incomePending));
   setHtml('income-summary-note',`Este mes hay <strong>${fmt(tI)}</strong> de ingresos planeados. Ya entró <strong>${fmt(incomeReceived)}</strong> y falta por recibir <strong>${fmt(incomePending)}</strong>.`);
+  setText('income-status-badge',completeItems.length+' / '+iM.length);
+  setText('income-status-ready',fmt(incomeReceived));
+  setText('income-status-waiting',fmt(incomePending));
+  setText('income-status-rule','Manual');
+  const pendingVerb=pendingItems.length===1?'sigue':'siguen';
+  const pendingWord=pendingItems.length===1?'pendiente':'pendientes';
+  setHtml('income-status-note',`De ${iM.length} ingresos del mes, <strong>${completeItems.length}</strong> ya estan completos, <strong>${receivedItems.length}</strong> tienen algun abono y <strong>${pendingItems.length}</strong> ${pendingVerb} ${pendingWord}.`);
 
   setText('expense-summary-badge',fmt(tG));
   setText('expense-total',fmt(tG));
@@ -1153,7 +1360,7 @@ function renderProx(){
   const el=document.getElementById('d-prox');
   const evs=[];
   gastos.filter(g=>g.mes===mesVista&&g.dia).forEach(g=>evs.push({dia:g.dia,desc:g.desc,monto:g.monto,kind:'gasto'}));
-  ingresos.filter(i=>i.mes===mesVista&&i.dia).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,kind:'ing'}));
+  ingresos.filter(i=>i.mes===mesVista&&i.dia&&!incomeIsReceived(i)).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,kind:'ing'}));
   recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc+(r.nota?' · '+r.nota:''),monto:r.monto,kind:'rec'}));
   const prox=evs.filter(e=>e.dia>=DIA_HOY).sort((a,b)=>a.dia-b.dia).slice(0,5);
   if(!prox.length){el.innerHTML='<div class="empty">Sin eventos próximos con fecha asignada</div>';return;}
@@ -1168,12 +1375,26 @@ function renderProx(){
 }
 
 function renderBarChart(){
-  const labels=[],iData=[],gData=[];
-  for(let i=5;i>=0;i--){const m=(mesVista-i+12)%12;labels.push(MESES[m].substring(0,3));iData.push(ingresos.filter(x=>x.mes===m).reduce((a,x)=>a+x.monto,0));gData.push(gastos.filter(x=>x.mes===m).reduce((a,x)=>a+x.monto,0));}
+  const labels=[],receivedData=[],expectedData=[],gData=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(anioVista,mesVista-i,1);
+    const m=d.getMonth();
+    const y=d.getFullYear();
+    const iMonth=ingresos.filter(x=>Number(x.mes)===m&&Number(x.anio||y)===y);
+    const gMonth=gastos.filter(x=>Number(x.mes)===m&&Number(x.anio||y)===y);
+    labels.push(MESES[m].substring(0,3));
+    receivedData.push(iMonth.reduce((a,x)=>a+incomeReceivedAmount(x),0));
+    expectedData.push(iMonth.reduce((a,x)=>a+x.monto,0));
+    gData.push(gMonth.reduce((a,x)=>a+x.monto,0));
+  }
   if(barChartInst)barChartInst.destroy();
   barChartInst=new Chart(document.getElementById('barChart'),{
     type:'bar',
-    data:{labels,datasets:[{label:'Ingresos',data:iData,backgroundColor:'#1D7D5A',borderRadius:4,borderSkipped:false},{label:'Gastos',data:gData,backgroundColor:'#C0392B',borderRadius:4,borderSkipped:false}]},
+    data:{labels,datasets:[
+      {label:'Ingresos recibidos',data:receivedData,backgroundColor:'#1D7D5A',borderRadius:4,borderSkipped:false},
+      {label:'Ingresos esperados',data:expectedData,type:'line',borderColor:'#1D4ED8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,fill:false},
+      {label:'Gastos',data:gData,backgroundColor:'#C0392B',borderRadius:4,borderSkipped:false}
+    ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:12}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fmt(v),font:{family:'DM Mono',size:11}}}}}
   });
 }
@@ -1242,9 +1463,11 @@ function periodFullLabel(d,period){
 
 function aggregateTrend(period){
   return trendPeriods(period).map(p=>{
-    const ingreso=ingresos.reduce((sum,x)=>{const d=recordDate(x);return d>=p.from&&d<p.to?sum+(x.monto||0):sum;},0);
+    const incomeItems=ingresos.filter(x=>{const d=recordDate(x);return d>=p.from&&d<p.to;});
+    const ingresoEsperado=incomeItems.reduce((sum,x)=>sum+(x.monto||0),0);
+    const ingresoRecibido=incomeItems.reduce((sum,x)=>sum+incomeReceivedAmount(x),0);
     const gasto=gastos.reduce((sum,x)=>{const d=recordDate(x);return d>=p.from&&d<p.to?sum+(x.monto||0):sum;},0);
-    return{...p,ingreso,gasto,balance:ingreso-gasto,rate:ingreso>0?Math.round(gasto/ingreso*100):0};
+    return{...p,ingresoRecibido,ingresoEsperado,gasto,balance:ingresoRecibido-gasto,rate:ingresoRecibido>0?Math.round(gasto/ingresoRecibido*100):0};
   });
 }
 
@@ -1264,7 +1487,8 @@ const trendValueLabels={
       meta.data.forEach((point,index)=>{
         const value=Number(dataset.data[index]||0);
         if(!value)return;
-        const offset=datasetIndex===0?-14:datasetIndex===1?14:-26;
+        const offsets=[-16,14,28,-30];
+        const offset=offsets[datasetIndex]||-16;
         ctx.fillStyle=dataset.borderColor||'#1A1917';
         ctx.fillText(fmtCompact(value),point.x,point.y+offset);
       });
@@ -1282,7 +1506,7 @@ function renderTrends(){
   const rows=aggregateTrend(trendPeriod);
   const currentStart=periodStartFor(trendCursor,trendPeriod);
   setText('trend-period-label',periodFullLabel(currentStart,trendPeriod));
-  const latest=rows[rows.length-1]||{ingreso:0,gasto:0,balance:0,rate:0};
+  const latest=rows[rows.length-1]||{ingresoRecibido:0,ingresoEsperado:0,gasto:0,balance:0,rate:0};
   const prev=rows[rows.length-2]||{balance:0};
   const delta=latest.balance-prev.balance;
   setText('trend-balance',fmt(latest.balance));
@@ -1298,9 +1522,10 @@ function renderTrends(){
     data:{
       labels:rows.map(r=>r.label),
       datasets:[
-        {label:'Ingresos',data:rows.map(r=>r.ingreso),borderColor:'#1D7D5A',backgroundColor:'rgba(29,125,90,.08)',tension:.3,fill:false},
+        {label:'Recibidos',data:rows.map(r=>r.ingresoRecibido),borderColor:'#1D7D5A',backgroundColor:'rgba(29,125,90,.08)',tension:.3,fill:false},
+        {label:'Esperados',data:rows.map(r=>r.ingresoEsperado),borderColor:'#1D4ED8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,fill:false},
         {label:'Gastos',data:rows.map(r=>r.gasto),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.08)',tension:.3,fill:false},
-        {label:'Balance',data:rows.map(r=>r.balance),borderColor:'#1D4ED8',backgroundColor:'rgba(29,78,216,.08)',tension:.3,fill:false}
+        {label:'Balance',data:rows.map(r=>r.balance),borderColor:'#B45309',backgroundColor:'rgba(180,83,9,.08)',tension:.3,fill:false}
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28,bottom:8,left:8,right:8}},plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:7,font:{family:'DM Sans',size:12}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11},maxRotation:0,autoSkip:true}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>fmt(v),font:{family:'DM Mono',size:11}}}}},
@@ -1309,14 +1534,14 @@ function renderTrends(){
 
   const table=document.getElementById('trend-table');
   if(!table)return;
-  table.innerHTML=`<div class="trend-row trend-head"><span>Periodo</span><span class="trend-cell-num">Ingresos</span><span class="trend-cell-num">Gastos</span><span class="trend-cell-num">Balance</span></div>`+
-    [...rows].reverse().map(r=>`<div class="trend-row"><span>${h(r.label)}</span><span class="trend-cell-num g">${fmt(r.ingreso)}</span><span class="trend-cell-num r">${fmt(r.gasto)}</span><span class="trend-cell-num ${r.balance>=0?'g':'r'}">${fmt(r.balance)}</span></div>`).join('');
+  table.innerHTML=`<div class="trend-row trend-head"><span>Periodo</span><span class="trend-cell-num">Recibido</span><span class="trend-cell-num">Esperado</span><span class="trend-cell-num">Gastos</span><span class="trend-cell-num">Balance</span></div>`+
+    [...rows].reverse().map(r=>`<div class="trend-row"><span>${h(r.label)}</span><span class="trend-cell-num g">${fmt(r.ingresoRecibido)}</span><span class="trend-cell-num b">${fmt(r.ingresoEsperado)}</span><span class="trend-cell-num r">${fmt(r.gasto)}</span><span class="trend-cell-num ${r.balance>=0?'g':'r'}">${fmt(r.balance)}</span></div>`).join('');
 }
 
 function renderTimeline(iM,gM){
   const el=document.getElementById('timeline-list');
   const evs=[];
-  iM.filter(i=>i.dia).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,kind:'ing'}));
+  iM.filter(i=>i.dia).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,receivedAmount:incomeReceivedAmount(i),pendingAmount:incomePendingAmount(i),kind:'ing',received:incomeIsReceived(i)}));
   gM.filter(g=>g.dia).forEach(g=>evs.push({dia:g.dia,desc:g.desc,monto:g.monto,kind:g.tipo==='indispensable'?'ind':'nind',cat:g.cat}));
   recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc,monto:r.monto,kind:'rec'}));
   if(!evs.length){el.innerHTML='<div class="empty">Agrega registros con día asignado para ver el flujo</div>';return;}
@@ -1326,9 +1551,9 @@ function renderTimeline(iM,gM){
     const its=byDay[d];const past=d<DIA_HOY,today=d===DIA_HOY;
     const dc=today?'var(--blue)':past?'var(--muted)':'var(--green)';
     const dbg=today?'var(--blue-bg)':past?'rgba(0,0,0,.04)':'var(--green-bg)';
-    its.forEach(e=>bal+=e.kind==='ing'?e.monto:e.kind==='rec'?0:-e.monto);
+    its.forEach(e=>bal+=e.kind==='ing'?(e.receivedAmount||0):e.kind==='rec'?0:-e.monto);
     const bc=bal>=0?'var(--green)':'var(--red)';
-    return`<div class="tl-item"><div class="tl-day" style="background:${dbg};color:${dc}">${d}</div><div class="tl-body"><div class="tl-lbl">${today?'Hoy':past?'Día '+d+' (pasado)':'Día '+d}</div>${its.map(e=>{const tc=e.kind==='ing'?'var(--green)':e.kind==='ind'?'var(--red)':'var(--amber)';const s=e.kind==='ing'?'+':e.kind==='rec'?'apartar ':'-';const meta=e.kind==='rec'?' <span style="font-size:11px;color:var(--muted)">(fijo)</span>':'';return`<div class="tl-row"><span class="tl-desc" style="color:${tc}">${h(e.desc)}${meta}</span><span class="tl-amt" style="color:${tc}">${s}${fmt(e.monto)}</span></div>`;}).join('')}<div class="tl-bal">Saldo real acumulado: <span style="color:${bc};font-weight:600">${fmt(bal)}</span></div></div></div>`;
+    return`<div class="tl-item"><div class="tl-day" style="background:${dbg};color:${dc}">${d}</div><div class="tl-body"><div class="tl-lbl">${today?'Hoy':past?'Día '+d+' (pasado)':'Día '+d}</div>${its.map(e=>{const partial=e.kind==='ing'&&e.receivedAmount>0&&!e.received;const tc=e.kind==='ing'?(e.received?'var(--green)':partial?'var(--amber)':'var(--blue)'):e.kind==='ind'?'var(--red)':'var(--amber)';const s=e.kind==='ing'?(e.received?'+':partial?'parcial +':'por recibir '):e.kind==='rec'?'apartar ':'-';const amt=e.kind==='ing'?(e.receivedAmount>0?e.receivedAmount:e.monto):e.monto;const meta=e.kind==='rec'?' <span style="font-size:11px;color:var(--muted)">(fijo)</span>':partial?` <span style="font-size:11px;color:var(--muted)">(${fmt(e.pendingAmount)} pendiente)</span>`:e.kind==='ing'&&!e.received?' <span style="font-size:11px;color:var(--muted)">(pendiente)</span>':'';return`<div class="tl-row"><span class="tl-desc" style="color:${tc}">${h(e.desc)}${meta}</span><span class="tl-amt" style="color:${tc}">${s}${fmt(amt)}</span></div>`;}).join('')}<div class="tl-bal">Saldo real acumulado: <span style="color:${bc};font-weight:600">${fmt(bal)}</span></div></div></div>`;
   }).join('');
 }
 
@@ -1369,6 +1594,14 @@ function renderListaIngresos(){
   if(!ingresos.length){el.innerHTML='<div class="empty">Sin ingresos registrados</div>';return;}
   el.innerHTML=[...ingresos].reverse().slice(0,30).map(x=>{
     const id=Number(x.id)||0;
+    const receivedAmount=incomeReceivedAmount(x);
+    const pendingAmount=incomePendingAmount(x);
+    const received=incomeIsReceived(x);
+    const partial=receivedAmount>0&&!received;
+    const tagText=received?'Completo':partial?'Parcial':'Pendiente';
+    const tagClass=received?'badge-green':partial?'badge-amber':'badge-blue';
+    const actionText=received?'Quitar cobros':'Completar';
+    const actionClass=received?'danger':'primary';
     return`
     <div class="list-item">
       <div class="item-left">
@@ -1376,7 +1609,9 @@ function renderListaIngresos(){
         <div><div class="item-desc">${h(x.desc||'—')}${x.quien?' · '+h(x.quien):''}</div><div class="item-meta">Día ${x.dia||'—'} · ${MESES[x.mes]||''}${x.origen==='telegram'?' · TG':''}</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:4px">
-        <div class="item-amount g">${fmt(x.monto)}</div>
+        <div class="card-badge ${tagClass}">${tagText}</div>
+        <button class="rec-action ${actionClass}" onclick="toggleIngresoRecibido(${id},${!received})">${actionText}</button>
+        <div class="item-amount g">${fmt(receivedAmount)} / ${fmt(x.monto)}</div>
         <button class="edit-btn" onclick="abrirEditIngreso(${id})">✏️</button>
         <button class="del-btn" onclick="delIngreso(${id})">×</button>
       </div>
@@ -1425,9 +1660,9 @@ function renderListaRecs(){
 function actualizarMeta(tI,tG){
   const meta=parseFloat(document.getElementById('meta-input')?.value)||metaGuardada||0;
   const el=document.getElementById('meta-prog');if(!el)return;
-  const iM=ingresos.filter(x=>x.mes===mesVista);
-  const gM=gastos.filter(x=>x.mes===mesVista);
-  const ti=tI!==undefined?tI:iM.reduce((a,x)=>a+x.monto,0);
+  const iM=ingresos.filter(itemIsVisibleMonth);
+  const gM=gastos.filter(itemIsVisibleMonth);
+  const ti=tI!==undefined?tI:iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
   const tg=tG!==undefined?tG:gM.reduce((a,x)=>a+x.monto,0);
   const bal=ti-tg;
   if(!meta){document.getElementById('meta-fill').style.width='0%';document.getElementById('meta-actual').textContent=fmt(bal)+' ahorrado';document.getElementById('meta-objetivo').textContent='Meta: $0';document.getElementById('meta-pct-badge').textContent='0%';return;}
