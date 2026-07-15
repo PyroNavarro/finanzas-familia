@@ -427,11 +427,15 @@ body.auth-ok .access-screen{display:none}
     <div class="form-title">Agregar recordatorio de pago</div>
     <div class="row2">
       <div class="field"><label>Descripción</label><input type="text" id="r-desc" placeholder="Ej: TC Nu, Seguro"/></div>
-      <div class="field"><label>Monto actual</label><input type="number" id="r-monto" placeholder="0.00"/></div>
+      <div class="field"><label>Monto estimado</label><input type="number" id="r-monto" placeholder="0.00"/></div>
     </div>
     <div class="row2">
       <div class="field"><label>Día del mes</label><input type="number" id="r-dia" placeholder="Ej: 16" min="1" max="31"/></div>
-      <div class="field"><label>Frecuencia</label><select id="r-tipo"><option value="mensual">Mensual</option><option value="anual">Anual</option><option value="semanal">Semanal</option></select></div>
+      <div class="field"><label>Frecuencia</label><select id="r-tipo"><option value="mensual">Mensual</option><option value="bimestral">Bimestral</option><option value="anual">Anual</option><option value="semanal">Semanal</option><option value="variable">Variable / TBD</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Rango mínimo (opcional)</label><input type="number" id="r-monto-min" placeholder="Ej: 300"/></div>
+      <div class="field"><label>Rango máximo (opcional)</label><input type="number" id="r-monto-max" placeholder="Ej: 700"/></div>
     </div>
     <div class="field"><label>Notas (opcional)</label><input type="text" id="r-nota" placeholder="Ej: varía cada mes, incluye MSI"/></div>
     <button class="submit-btn" onclick="addRec()">Agregar recordatorio</button>
@@ -535,8 +539,9 @@ body.auth-ok .access-screen{display:none}
     </div>
     <div id="modal-rec" style="display:none">
       <div class="modal-field"><label>Descripción</label><input type="text" id="er-desc"/></div>
-      <div class="modal-row2"><div class="modal-field"><label>Monto actual</label><input type="number" id="er-monto"/></div><div class="modal-field"><label>Día del mes</label><input type="number" id="er-dia" min="1" max="31"/></div></div>
-      <div class="modal-field"><label>Frecuencia</label><select id="er-tipo"><option value="mensual">Mensual</option><option value="anual">Anual</option><option value="semanal">Semanal</option></select></div>
+      <div class="modal-row2"><div class="modal-field"><label>Monto estimado</label><input type="number" id="er-monto"/></div><div class="modal-field"><label>Día del mes</label><input type="number" id="er-dia" min="1" max="31"/></div></div>
+      <div class="modal-field"><label>Frecuencia</label><select id="er-tipo"><option value="mensual">Mensual</option><option value="bimestral">Bimestral</option><option value="anual">Anual</option><option value="semanal">Semanal</option><option value="variable">Variable / TBD</option></select></div>
+      <div class="modal-row2"><div class="modal-field"><label>Rango mínimo</label><input type="number" id="er-monto-min"/></div><div class="modal-field"><label>Rango máximo</label><input type="number" id="er-monto-max"/></div></div>
       <div class="modal-field"><label>Notas</label><input type="text" id="er-nota" placeholder="Ej: varía cada mes"/></div>
     </div>
     <div class="modal-actions">
@@ -554,7 +559,7 @@ const HOY=new Date();
 let mesVista=HOY.getMonth();
 let anioVista=HOY.getFullYear();
 const DIA_HOY=HOY.getDate();
-const BACKEND_VERSION='finanzas-familia-write-v7';
+const BACKEND_VERSION='finanzas-familia-write-v8';
 const GOOGLE_SHEET_ID='17pgg3mwruTWm_Zj5cmyXXEfjKuihu8RIcD1JviSaKf0';
 const ACCESS_HASH='440ba2d6280a5594ffb23c805a0d1c3428c02896a2f8958b1d54f3350d080e00';
 
@@ -763,6 +768,10 @@ async function syncData(){
         dia: parseInt(campo(r,'día','dia','Día','Dia'))||null,
         tipo: String(campo(r,'frecuencia','Frecuencia','tipo','Tipo')||'mensual'),
         nota: String(campo(r,'notas','Notas','nota','Nota')||''),
+        montoMin: parseFloat(campo(r,'montoMin','MontoMin'))||0,
+        montoMax: parseFloat(campo(r,'montoMax','MontoMax'))||0,
+        variable: String(campo(r,'variable','Variable')||''),
+        proximoEstado: String(campo(r,'proximoEstado','ProximoEstado')||''),
         apartadoMes: String(campo(r,'apartadoMes','ApartadoMes','apartado','Apartado')||''),
         pagadoMes: String(campo(r,'pagadoMes','PagadoMes','pagado','Pagado')||''),
         gastoPagadoId: String(campo(r,'gastoPagadoId','GastoPagadoId')||''),
@@ -833,13 +842,17 @@ function addRec(){
   const dia=parseInt(document.getElementById('r-dia').value);
   const tipo=document.getElementById('r-tipo').value;
   const nota=document.getElementById('r-nota').value.trim();
+  const montoMin=parseFloat(document.getElementById('r-monto-min').value)||0;
+  const montoMax=parseFloat(document.getElementById('r-monto-max').value)||0;
+  const variable=tipo==='variable'||montoMin>0||montoMax>0?'si':'';
+  const proximoEstado=tipo==='variable'?'tbd':'';
   if(!desc||!dia){toast('Completa descripción y día');return;}
   const id=Date.now();
-  recs.push({id,fecha:new Date(anioVista,mesVista,dia).toISOString(),desc,monto,dia,tipo,nota,origen:'manual'});
+  recs.push({id,fecha:new Date(anioVista,mesVista,dia).toISOString(),desc,monto,dia,tipo,nota,montoMin,montoMax,variable,proximoEstado,origen:'manual'});
   save();
-  ['r-desc','r-monto','r-dia','r-nota'].forEach(id=>document.getElementById(id).value='');
+  ['r-desc','r-monto','r-dia','r-nota','r-monto-min','r-monto-max'].forEach(id=>document.getElementById(id).value='');
   render();toast('Recordatorio guardado');
-  if(scriptUrl)pushToSheet({tipo:'recordatorio',id,desc,monto,dia,frecuencia:tipo,notas:nota});
+  if(scriptUrl)pushToSheet({tipo:'recordatorio',id,desc,monto,dia,frecuencia:tipo,notas:nota,montoMin,montoMax,variable,proximoEstado});
 }
 
 function delGasto(id){
@@ -940,16 +953,36 @@ async function pagarRec(id,checked){
   }
   const ok=confirm('¿Registrar este pago como gasto real?');
   if(!ok){render();return;}
+  let gastoMonto=recPlanningAmount(r);
+  if(recIsVariable(r)){
+    const montoTxt=prompt('Monto exacto pagado para '+(r.desc||'este pago'),String(gastoMonto||''));
+    if(montoTxt===null){render();return;}
+    gastoMonto=parseFloat(String(montoTxt).replace(/,/g,''));
+    if(!gastoMonto||gastoMonto<=0){toast('Monto inválido');render();return;}
+    const nextTxt=prompt('¿Cómo queda el siguiente cobro? Escribe: mensual, bimestral o tbd','tbd');
+    if(nextTxt===null){render();return;}
+    const next=String(nextTxt).trim().toLowerCase().replace('bi-mestral','bimestral');
+    if(!['mensual','bimestral','tbd'].includes(next)){toast('Usa mensual, bimestral o tbd');render();return;}
+    r.variable='si';
+    if(next==='tbd'){
+      r.tipo='variable';
+      r.proximoEstado='tbd';
+    }else{
+      r.tipo=next;
+      r.proximoEstado='';
+      r.fecha=new Date(anioVista,mesVista,r.dia||DIA_HOY).toISOString();
+    }
+  }
   const gastoId=Date.now();
   const dia=Math.min(DIA_HOY,31);
-  gastos.push({id:gastoId,desc:r.desc,monto:r.monto,dia,mes:mesVista,anio:anioVista,tipo:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
+  gastos.push({id:gastoId,desc:r.desc,monto:gastoMonto,dia,mes:mesVista,anio:anioVista,tipo:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
   r.pagadoMes=visibleMonthKey();
   r.apartadoMes='';
   r.gastoPagadoId=String(gastoId);
   save();render();
   if(scriptUrl){
-    await pushToSheet({tipo:'gasto',id:gastoId,desc:r.desc,monto:r.monto,dia,mes:mesVista,anio:anioVista,tipogasto:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
-    await pushToSheet({action:'update',tipo:'recordatorio',id:r.sheetId||r.id,apartadoMes:'',pagadoMes:r.pagadoMes,gastoPagadoId:r.gastoPagadoId});
+    await pushToSheet({tipo:'gasto',id:gastoId,desc:r.desc,monto:gastoMonto,dia,mes:mesVista,anio:anioVista,tipogasto:'indispensable',cat:'Pagos fijos',origen:'pago fijo'});
+    await pushToSheet({action:'update',tipo:'recordatorio',id:r.sheetId||r.id,fecha:r.fecha,frecuencia:r.tipo,apartadoMes:'',pagadoMes:r.pagadoMes,gastoPagadoId:r.gastoPagadoId,montoMin:r.montoMin||0,montoMax:r.montoMax||0,variable:r.variable||'',proximoEstado:r.proximoEstado||''});
   }
 }
 
@@ -959,7 +992,7 @@ function buscarGastoPagoFijo(r){
     String(g.origen||'')==='pago fijo'&&
     String(g.cat||'')==='Pagos fijos'&&
     String(g.desc||'')===String(r.desc||'')&&
-    Number(g.monto||0)===Number(r.monto||0)
+    (recIsVariable(r)||Number(g.monto||0)===Number(r.monto||0))
   );
 }
 
@@ -1083,6 +1116,8 @@ function abrirEditRec(id){
   document.getElementById('er-monto').value=r.monto||'';
   document.getElementById('er-dia').value=r.dia;
   document.getElementById('er-tipo').value=r.tipo;
+  document.getElementById('er-monto-min').value=r.montoMin||'';
+  document.getElementById('er-monto-max').value=r.montoMax||'';
   document.getElementById('er-nota').value=r.nota||'';
   document.getElementById('modal-titulo').textContent='Editar recordatorio';
   document.getElementById('modal-gasto').style.display='none';
@@ -1112,10 +1147,15 @@ async function guardarIngreso(){
 
 async function guardarRec(){
   const idx=recs.findIndex(x=>x.id===modalId);if(idx<0)return;
-  recs[idx]={...recs[idx],desc:document.getElementById('er-desc').value.trim(),monto:parseFloat(document.getElementById('er-monto').value)||0,dia:parseInt(document.getElementById('er-dia').value),tipo:document.getElementById('er-tipo').value,nota:document.getElementById('er-nota').value.trim()};
+  const tipo=document.getElementById('er-tipo').value;
+  const montoMin=parseFloat(document.getElementById('er-monto-min').value)||0;
+  const montoMax=parseFloat(document.getElementById('er-monto-max').value)||0;
+  const variable=tipo==='variable'||montoMin>0||montoMax>0?'si':(recs[idx].variable||'');
+  const proximoEstado=tipo==='variable'?(recs[idx].proximoEstado||'tbd'):'';
+  recs[idx]={...recs[idx],desc:document.getElementById('er-desc').value.trim(),monto:parseFloat(document.getElementById('er-monto').value)||0,dia:parseInt(document.getElementById('er-dia').value),tipo,nota:document.getElementById('er-nota').value.trim(),montoMin,montoMax,variable,proximoEstado};
   save();closeModal();render();toast('Recordatorio actualizado');
   const r=recs[idx];
-  if(scriptUrl)await pushToSheet({action:'update',tipo:'recordatorio',id:r.sheetId||r.id,fecha:r.fecha,desc:r.desc,monto:r.monto,dia:r.dia,frecuencia:r.tipo,notas:r.nota||r.notas||'',origen:r.origen||'manual',apartadoMes:r.apartadoMes||'',pagadoMes:r.pagadoMes||'',gastoPagadoId:r.gastoPagadoId||''});
+  if(scriptUrl)await pushToSheet({action:'update',tipo:'recordatorio',id:r.sheetId||r.id,fecha:r.fecha,desc:r.desc,monto:r.monto,dia:r.dia,frecuencia:r.tipo,notas:r.nota||r.notas||'',origen:r.origen||'manual',apartadoMes:r.apartadoMes||'',pagadoMes:r.pagadoMes||'',gastoPagadoId:r.gastoPagadoId||'',montoMin:r.montoMin||0,montoMax:r.montoMax||0,variable:r.variable||'',proximoEstado:r.proximoEstado||''});
 }
 
 function closeModal(){document.getElementById('modal').classList.remove('open');modalId=null;}
@@ -1186,6 +1226,34 @@ function recFrequency(r){
   return String(r.tipo||r.frecuencia||'mensual').toLowerCase().replace('bi-mestral','bimestral');
 }
 
+function recIsVariable(r){
+  const variableText=String(r.variable||'').toLowerCase();
+  return recFrequency(r)==='variable'||variableText==='si'||variableText==='true'||Number(r.montoMin||0)>0||Number(r.montoMax||0)>0;
+}
+
+function recIsTbd(r){
+  return recIsVariable(r)&&String(r.proximoEstado||'').toLowerCase()==='tbd';
+}
+
+function recPlanningAmount(r){
+  const base=Number(r.monto)||0;
+  if(!recIsVariable(r))return base;
+  return Math.max(base,Number(r.montoMax)||0,Number(r.montoMin)||0);
+}
+
+function recAmountText(r){
+  if(!recIsVariable(r))return r.monto?fmt(r.monto):'';
+  const min=Number(r.montoMin)||0;
+  const max=recPlanningAmount(r);
+  if(min&&max&&min!==max)return `${fmt(min)}-${fmt(max)} est.`;
+  return max?`${fmt(max)} est.`:'variable';
+}
+
+function recFrequencyText(r){
+  if(recIsTbd(r))return 'variable · TBD';
+  return recFrequency(r);
+}
+
 function monthDiff(from,toYear,toMonth){
   return (toYear-from.getFullYear())*12+(toMonth-from.getMonth());
 }
@@ -1193,6 +1261,12 @@ function monthDiff(from,toYear,toMonth){
 function recAppliesToMonth(r,month=mesVista,year=anioVista){
   const freq=recFrequency(r);
   const base=parseRecDate(r);
+  const targetKey=year+'-'+String(month+1).padStart(2,'0');
+  if(String(r.pagadoMes||'')===targetKey||String(r.apartadoMes||'')===targetKey)return true;
+  if(recIsTbd(r)){
+    if(!base)return false;
+    return base.getFullYear()===year&&base.getMonth()===month;
+  }
   if(freq==='mensual'||freq==='quincenal'||!freq)return true;
   if(!base)return true;
   const diff=monthDiff(base,year,month);
@@ -1312,14 +1386,14 @@ function itemIsVisibleMonth(x){
 function getBudgetModel(iM,gM,tI,tG){
   const visibleRecs=pendingRecsForVisibleMonth();
   const allVisibleRecs=recsForVisibleMonth();
-  const fixedTotal=visibleRecs.reduce((a,x)=>a+(x.monto||0),0);
-  const apartadoTotal=visibleRecs.filter(recIsApartado).reduce((a,x)=>a+(x.monto||0),0);
+  const fixedTotal=visibleRecs.reduce((a,x)=>a+recPlanningAmount(x),0);
+  const apartadoTotal=visibleRecs.filter(recIsApartado).reduce((a,x)=>a+recPlanningAmount(x),0);
   const variableTotal=gM.reduce((a,x)=>a+(x.monto||0),0);
   const projected=tI-fixedTotal-variableTotal;
   const nextIncome=iM.filter(i=>i.dia&&!incomeIsReceived(i)).sort((a,b)=>a.dia-b.dia)[0]||null;
   const fixedBeforeIncome=visibleRecs
     .filter(r=>r.dia>=DIA_HOY&&(!nextIncome||r.dia<nextIncome.dia))
-    .reduce((a,x)=>a+(x.monto||0),0);
+    .reduce((a,x)=>a+recPlanningAmount(x),0);
   const variableBeforeIncome=gM
     .filter(g=>g.dia>=DIA_HOY&&(!nextIncome||g.dia<nextIncome.dia))
     .reduce((a,x)=>a+(x.monto||0),0);
@@ -1327,7 +1401,7 @@ function getBudgetModel(iM,gM,tI,tG){
   const spentUntilNow=gM.filter(g=>!g.dia||g.dia<=DIA_HOY).reduce((a,x)=>a+(x.monto||0),0);
   const cashBeforeIncome=incomeUntilNow-spentUntilNow-variableBeforeIncome;
   const cushion=cashBeforeIncome-fixedBeforeIncome;
-  return{fixedTotal,apartadoTotal,allFixedTotal:allVisibleRecs.reduce((a,x)=>a+(x.monto||0),0),variableTotal,projected,nextIncome,fixedBeforeIncome,variableBeforeIncome,cushion};
+  return{fixedTotal,apartadoTotal,allFixedTotal:allVisibleRecs.reduce((a,x)=>a+recPlanningAmount(x),0),variableTotal,projected,nextIncome,fixedBeforeIncome,variableBeforeIncome,cushion};
 }
 
 function renderBudgetModel(iM,gM,tI,tG,model){
@@ -1411,7 +1485,7 @@ function renderProx(){
   const evs=[];
   gastos.filter(g=>g.mes===mesVista&&g.dia).forEach(g=>evs.push({dia:g.dia,desc:g.desc,monto:g.monto,kind:'gasto'}));
   ingresos.filter(i=>i.mes===mesVista&&i.dia&&!incomeIsReceived(i)).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,kind:'ing'}));
-  recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc+(r.nota?' · '+r.nota:''),monto:r.monto,kind:'rec'}));
+  recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc+(r.nota?' · '+r.nota:''),monto:recPlanningAmount(r),kind:'rec'}));
   const prox=evs.filter(e=>e.dia>=DIA_HOY).sort((a,b)=>a.dia-b.dia).slice(0,5);
   if(!prox.length){el.innerHTML='<div class="empty">Sin eventos próximos con fecha asignada</div>';return;}
   el.innerHTML=prox.map(e=>{
@@ -1607,7 +1681,7 @@ function renderTimeline(iM,gM){
     }
   });
   gM.filter(g=>g.dia).forEach(g=>evs.push({dia:g.dia,desc:g.desc,monto:g.monto,kind:g.tipo==='indispensable'?'ind':'nind',cat:g.cat}));
-  recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc,monto:r.monto,kind:'rec'}));
+  recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc,monto:recPlanningAmount(r),kind:'rec'}));
   if(!evs.length){el.innerHTML='<div class="empty">Agrega registros con día asignado para ver el flujo</div>';return;}
   const byDay={};evs.forEach(e=>{if(!byDay[e.dia])byDay[e.dia]=[];byDay[e.dia].push(e);});
   let bal=0;
@@ -1691,10 +1765,12 @@ function renderListaRecs(){
     pagado:{title:'Pagados',cls:'g',items:[]}
   };
   const offMonth=[];
+  const tbdMonth=[];
   recs.forEach(r=>{
-    if(!recAppliesToMonth(r)){offMonth.push(r);return;}
     if(recIsPagado(r))buckets.pagado.items.push(r);
     else if(recIsApartado(r))buckets.apartado.items.push(r);
+    else if(recIsTbd(r)&&!recAppliesToMonth(r))tbdMonth.push(r);
+    else if(!recAppliesToMonth(r))offMonth.push(r);
     else buckets.pendiente.items.push(r);
   });
   const sortByDay=(a,b)=>(Number(a.dia||99)-Number(b.dia||99))||String(a.desc||'').localeCompare(String(b.desc||''),'es');
@@ -1711,6 +1787,7 @@ function renderListaRecs(){
   buckets.pendiente.items.sort(sortByNextPendingDate);
   buckets.apartado.items.sort(sortByDay);
   buckets.pagado.items.sort(sortByDay);
+  tbdMonth.sort(sortByDay);
   offMonth.sort(sortByDay);
   const renderCard=(r,state)=>{
     const id=Number(r.id)||0;
@@ -1720,20 +1797,23 @@ function renderListaRecs(){
     const pagado=recIsPagado(r);
     const c=!applies?'var(--muted)':diff<=3&&diff>=0?'var(--red)':diff<0?'var(--muted)':'var(--blue)';
     const bg=!applies?'rgba(0,0,0,.04)':diff<=3&&diff>=0?'var(--red-bg)':diff<0?'rgba(0,0,0,.04)':'var(--blue-bg)';
-    const status=pagado?'pagado':apartado?'apartado':applies?'pendiente':'no este mes';
+    const status=state==='tbd'?'por confirmar':pagado?'pagado':apartado?'apartado':applies?'pendiente':'no este mes';
     let actions='';
     if(state==='pendiente')actions=`<button class="rec-action warn" onclick="toggleRecApartado(${id},true)">Apartar</button><button class="rec-action primary" onclick="pagarRec(${id},true)">Pagar</button>`;
     if(state==='apartado')actions=`<button class="rec-action danger" onclick="toggleRecApartado(${id},false)">Quitar apartado</button><button class="rec-action primary" onclick="pagarRec(${id},true)">Pagar</button>`;
     if(state==='pagado')actions=`<button class="rec-action danger" onclick="pagarRec(${id},false)">Revertir</button>`;
-    return`<div class="rec-item"><div class="rec-day" style="background:${bg};color:${c}">${r.dia||'—'}</div><div class="rec-body"><div class="rec-desc">${h(r.desc||'—')}</div><div class="rec-sub">${h(recFrequency(r))} · ${status}${r.monto?' · '+fmt(r.monto):''}${r.nota?' · '+h(r.nota):''}</div>${actions?`<div class="rec-actions">${actions}</div>`:''}</div><div class="rec-icon-actions"><button class="edit-btn" onclick="abrirEditRec(${id})">✏️</button><button class="del-btn" onclick="delRec(${id})">×</button></div></div>`;
+    if(state==='tbd')actions=`<button class="rec-action warn" onclick="toggleRecApartado(${id},true)">Apartar</button><button class="rec-action primary" onclick="pagarRec(${id},true)">Pagar</button>`;
+    const amountText=recAmountText(r);
+    return`<div class="rec-item"><div class="rec-day" style="background:${bg};color:${c}">${r.dia||'—'}</div><div class="rec-body"><div class="rec-desc">${h(r.desc||'—')}</div><div class="rec-sub">${h(recFrequencyText(r))} · ${status}${amountText?' · '+h(amountText):''}${r.nota?' · '+h(r.nota):''}</div>${actions?`<div class="rec-actions">${actions}</div>`:''}</div><div class="rec-icon-actions"><button class="edit-btn" onclick="abrirEditRec(${id})">✏️</button><button class="del-btn" onclick="delRec(${id})">×</button></div></div>`;
   };
   const renderColumn=key=>{
     const b=buckets[key];
-    const total=b.items.reduce((a,x)=>a+(x.monto||0),0);
+    const total=b.items.reduce((a,x)=>a+recPlanningAmount(x),0);
     return`<div class="pay-col"><div class="pay-col-head"><div class="pay-col-title">${b.title}</div><div class="pay-col-total ${b.cls}">${fmt(total)}</div></div><div class="pay-list">${b.items.length?b.items.map(r=>renderCard(r,key)).join(''):'<div class="empty" style="padding:16px 0">Sin pagos</div>'}</div></div>`;
   };
+  const tbdHtml=tbdMonth.length?`<div class="off-month-list"><div class="pay-col-head"><div class="pay-col-title">Variables por confirmar</div><div class="pay-col-total">${tbdMonth.length}</div></div><div class="pay-list">${tbdMonth.map(r=>renderCard(r,'tbd')).join('')}</div></div>`:'';
   const offHtml=offMonth.length?`<div class="off-month-list"><div class="pay-col-head"><div class="pay-col-title">No aplican este mes</div><div class="pay-col-total">${offMonth.length}</div></div><div class="pay-list">${offMonth.map(r=>renderCard(r,'off')).join('')}</div></div>`:'';
-  el.innerHTML=`<div class="payments-board">${renderColumn('pendiente')}${renderColumn('apartado')}${renderColumn('pagado')}</div>${offHtml}`;
+  el.innerHTML=`<div class="payments-board">${renderColumn('pendiente')}${renderColumn('apartado')}${renderColumn('pagado')}</div>${tbdHtml}${offHtml}`;
 }
 
 function actualizarMeta(tI,tG){

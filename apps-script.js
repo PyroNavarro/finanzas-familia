@@ -1,5 +1,5 @@
 const SHEET_ID = '17pgg3mwruTWm_Zj5cmyXXEfjKuihu8RIcD1JviSaKf0';
-const APP_VERSION = 'finanzas-familia-write-v7';
+const APP_VERSION = 'finanzas-familia-write-v8';
 const API_TOKEN = '05b58aae476517f01223cb670ad12d0e26c9a99ae2fef405';
 
 const SHEETS = {
@@ -13,7 +13,7 @@ const SHEETS = {
   },
   recordatorios: {
     name: 'Recordatorios',
-    headers: ['ID', 'Fecha', 'Descripción', 'Monto', 'Día', 'Frecuencia', 'Notas', 'Origen', 'ApartadoMes', 'PagadoMes', 'GastoPagadoId']
+    headers: ['ID', 'Fecha', 'Descripción', 'Monto', 'Día', 'Frecuencia', 'Notas', 'Origen', 'ApartadoMes', 'PagadoMes', 'GastoPagadoId', 'MontoMin', 'MontoMax', 'Variable', 'ProximoEstado']
   },
   abonosIngresos: {
     name: 'AbonosIngresos',
@@ -172,7 +172,11 @@ function agregarRecordatorio(data) {
     safeSheetText(data.origen || 'telegram'),
     data.apartadoMes || '',
     data.pagadoMes || '',
-    data.gastoPagadoId || ''
+    data.gastoPagadoId || '',
+    numberOr(data.montoMin, 0),
+    numberOr(data.montoMax, 0),
+    safeSheetText(data.variable || ''),
+    safeSheetText(data.proximoEstado || '')
   ]);
 }
 
@@ -258,6 +262,10 @@ function actualizarCamposPorTipo(sheet, headers, row, tipo, data) {
     updateCellIfPresent(sheet, headers, row, 'ApartadoMes', firstDefined(data.apartadoMes));
     updateCellIfPresent(sheet, headers, row, 'PagadoMes', firstDefined(data.pagadoMes));
     updateCellIfPresent(sheet, headers, row, 'GastoPagadoId', firstDefined(data.gastoPagadoId));
+    updateCellIfPresent(sheet, headers, row, 'MontoMin', firstDefined(data.montoMin));
+    updateCellIfPresent(sheet, headers, row, 'MontoMax', firstDefined(data.montoMax));
+    updateCellIfPresent(sheet, headers, row, 'Variable', firstDefined(data.variable));
+    updateCellIfPresent(sheet, headers, row, 'ProximoEstado', firstDefined(data.proximoEstado));
     return;
   }
 
@@ -277,7 +285,7 @@ function updateCellIfPresent(sheet, headers, row, header, value) {
   const index = headers.indexOf(header);
   if (index >= 0 && value !== undefined) {
     const cell = sheet.getRange(row, index + 1);
-    if (header === 'ApartadoMes' || header === 'PagadoMes' || header === 'GastoPagadoId' || header === 'RecibidoMes') {
+    if (header === 'ApartadoMes' || header === 'PagadoMes' || header === 'GastoPagadoId' || header === 'RecibidoMes' || header === 'Variable' || header === 'ProximoEstado') {
       cell.setNumberFormat('@');
       cell.setValue(String(value || ''));
       return;
@@ -287,7 +295,7 @@ function updateCellIfPresent(sheet, headers, row, header, value) {
 }
 
 function safeSheetValue(header, value) {
-  const textHeaders = ['Descripción', 'Tipo', 'Categoría', 'Origen', 'Quién', 'Frecuencia', 'Notas', 'Nota', 'IngresoID'];
+  const textHeaders = ['Descripción', 'Tipo', 'Categoría', 'Origen', 'Quién', 'Frecuencia', 'Notas', 'Nota', 'IngresoID', 'Variable', 'ProximoEstado'];
   return textHeaders.indexOf(header) >= 0 ? safeSheetText(value) : value;
 }
 
@@ -378,7 +386,11 @@ function leerRecordatorios(sheet) {
     origen: row.Origen || '',
     apartadoMes: normalizeMonthMarker(row.ApartadoMes),
     pagadoMes: normalizeMonthMarker(row.PagadoMes),
-    gastoPagadoId: row.GastoPagadoId || ''
+    gastoPagadoId: row.GastoPagadoId || '',
+    montoMin: numberOr(row.MontoMin, 0),
+    montoMax: numberOr(row.MontoMax, 0),
+    variable: row.Variable || '',
+    proximoEstado: row.ProximoEstado || ''
   }));
 }
 
