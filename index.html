@@ -22,7 +22,7 @@ body.auth-ok .access-screen{display:none}
 .sync-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid var(--border-strong);background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s}
 .sync-btn:hover{background:var(--bg);color:var(--text)}
 .sync-btn.syncing svg{animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spin{to{transform:rotate(-360deg)}}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);font-size:10px;transition:color .15s}
 .nav-item.active{color:var(--text)}.nav-item svg{width:20px;height:20px;stroke-width:1.5}
