@@ -1698,7 +1698,17 @@ function renderListaRecs(){
     else buckets.pendiente.items.push(r);
   });
   const sortByDay=(a,b)=>(Number(a.dia||99)-Number(b.dia||99))||String(a.desc||'').localeCompare(String(b.desc||''),'es');
-  buckets.pendiente.items.sort(sortByDay);
+  const sortByNextPendingDate=(a,b)=>{
+    const nextDate=r=>{
+      const day=Number(r.dia||99);
+      const base=new Date(anioVista,mesVista,day);
+      const today=new Date(HOY.getFullYear(),HOY.getMonth(),HOY.getDate());
+      if(base<today)return new Date(anioVista,mesVista+1,day);
+      return base;
+    };
+    return nextDate(a)-nextDate(b)||String(a.desc||'').localeCompare(String(b.desc||''),'es');
+  };
+  buckets.pendiente.items.sort(sortByNextPendingDate);
   buckets.apartado.items.sort(sortByDay);
   buckets.pagado.items.sort(sortByDay);
   offMonth.sort(sortByDay);
