@@ -1126,7 +1126,7 @@ function render(){
   const iM=ingresos.filter(itemIsVisibleMonth);
   const gM=gastos.filter(itemIsVisibleMonth);
   const tI=iM.reduce((a,x)=>a+x.monto,0);
-  const receivedIncome=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
+  const receivedIncome=incomeReceivedForMonth(mesVista,anioVista);
   const tG=gM.reduce((a,x)=>a+x.monto,0);
   const bal=receivedIncome-tG;
   const budget=getBudgetModel(iM,gM,tI,tG);
@@ -1229,6 +1229,56 @@ function incomeAbonosAmount(i){
   return incomeAbonos(i).reduce((sum,a)=>sum+(Number(a.monto)||0),0);
 }
 
+function dateFromParts(year,month,day){
+  const d=new Date(Number(year),Number(month),Math.min(Math.max(Number(day||1),1),31));
+  return Number.isNaN(d.getTime())?null:d;
+}
+
+function abonoDate(a){
+  if(a.fecha){
+    const d=new Date(a.fecha);
+    if(!Number.isNaN(d.getTime()))return d;
+  }
+  return dateFromParts(a.anio||a.ano||anioVista,a.mes||mesVista,a.dia||1);
+}
+
+function dateInPeriod(d,from,to){
+  return d&&!Number.isNaN(d.getTime())&&d>=from&&d<to;
+}
+
+function monthPeriod(month,year){
+  return {from:new Date(year,month,1),to:new Date(year,month+1,1)};
+}
+
+function incomeReceivedInPeriod(i,from,to){
+  const cap=Number(i.monto)||0;
+  const abonos=incomeAbonos(i);
+  const paid=abonos
+    .filter(a=>dateInPeriod(abonoDate(a),from,to))
+    .reduce((sum,a)=>sum+(Number(a.monto)||0),0);
+  if(paid>0)return Math.min(cap,paid);
+
+  if(!abonos.length&&String(i.recibidoMes||'')){
+    const [year,month]=String(i.recibidoMes).split('-').map(Number);
+    if(year&&month){
+      const d=new Date(year,month-1,Number(i.dia||1));
+      if(dateInPeriod(d,from,to))return cap;
+    }
+  }
+  return 0;
+}
+
+function incomeReceivedForMonth(month,year){
+  const p=monthPeriod(month,year);
+  return ingresos.reduce((sum,i)=>sum+incomeReceivedInPeriod(i,p.from,p.to),0);
+}
+
+function incomeReceivedUntilDay(month,year,day){
+  const from=new Date(year,month,1);
+  const to=new Date(year,month,Number(day||1)+1);
+  return ingresos.reduce((sum,i)=>sum+incomeReceivedInPeriod(i,from,to),0);
+}
+
 function incomeReceivedAmount(i){
   const paid=incomeAbonosAmount(i);
   if(paid>0)return Math.min(Number(i.monto)||0,paid);
@@ -1273,7 +1323,7 @@ function getBudgetModel(iM,gM,tI,tG){
   const variableBeforeIncome=gM
     .filter(g=>g.dia>=DIA_HOY&&(!nextIncome||g.dia<nextIncome.dia))
     .reduce((a,x)=>a+(x.monto||0),0);
-  const incomeUntilNow=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
+  const incomeUntilNow=incomeReceivedUntilDay(mesVista,anioVista,DIA_HOY);
   const spentUntilNow=gM.filter(g=>!g.dia||g.dia<=DIA_HOY).reduce((a,x)=>a+(x.monto||0),0);
   const cashBeforeIncome=incomeUntilNow-spentUntilNow-variableBeforeIncome;
   const cushion=cashBeforeIncome-fixedBeforeIncome;
@@ -1282,11 +1332,11 @@ function getBudgetModel(iM,gM,tI,tG){
 
 function renderBudgetModel(iM,gM,tI,tG,model){
   const m=model||getBudgetModel(iM,gM,tI,tG);
-  const receivedItems=iM.filter(i=>incomeReceivedAmount(i)>0);
+  const partialItems=iM.filter(i=>incomeReceivedAmount(i)>0&&!incomeIsReceived(i));
   const pendingItems=iM.filter(i=>incomePendingAmount(i)>0);
   const completeItems=iM.filter(incomeIsReceived);
-  const incomeReceived=iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
-  const incomePending=Math.max(0,tI-incomeReceived);
+  const incomeReceived=incomeReceivedForMonth(mesVista,anioVista);
+  const incomePending=iM.reduce((a,x)=>a+incomePendingAmount(x),0);
   const essential=gM.filter(g=>g.tipo==='indispensable').reduce((a,x)=>a+(x.monto||0),0);
   const nonEssential=gM.filter(g=>g.tipo==='no_indispensable').reduce((a,x)=>a+(x.monto||0),0);
   const fixedPct=tI>0?Math.min(100,Math.round(m.fixedTotal/tI*100)):0;
@@ -1316,14 +1366,14 @@ function renderBudgetModel(iM,gM,tI,tG,model){
   setText('income-total',fmt(tI));
   setText('income-received',fmt(incomeReceived));
   setText('income-pending',fmt(incomePending));
-  setHtml('income-summary-note',`Este mes hay <strong>${fmt(tI)}</strong> de ingresos planeados. Ya entró <strong>${fmt(incomeReceived)}</strong> y falta por recibir <strong>${fmt(incomePending)}</strong>.`);
+  setHtml('income-summary-note',`Este mes hay <strong>${fmt(tI)}</strong> de ingresos planeados. Ya entró a caja <strong>${fmt(incomeReceived)}</strong> y falta por recibir <strong>${fmt(incomePending)}</strong>.`);
   setText('income-status-badge',completeItems.length+' / '+iM.length);
   setText('income-status-ready',fmt(incomeReceived));
   setText('income-status-waiting',fmt(incomePending));
   setText('income-status-rule','Manual');
   const pendingVerb=pendingItems.length===1?'sigue':'siguen';
   const pendingWord=pendingItems.length===1?'pendiente':'pendientes';
-  setHtml('income-status-note',`De ${iM.length} ingresos del mes, <strong>${completeItems.length}</strong> ya estan completos, <strong>${receivedItems.length}</strong> tienen algun abono y <strong>${pendingItems.length}</strong> ${pendingVerb} ${pendingWord}.`);
+  setHtml('income-status-note',`De ${iM.length} ingresos del mes, <strong>${completeItems.length}</strong> ya están completos, <strong>${partialItems.length}</strong> tienen algún abono y <strong>${pendingItems.length}</strong> ${pendingVerb} ${pendingWord}.`);
 
   setText('expense-summary-badge',fmt(tG));
   setText('expense-total',fmt(tG));
@@ -1383,7 +1433,7 @@ function renderBarChart(){
     const iMonth=ingresos.filter(x=>Number(x.mes)===m&&Number(x.anio||y)===y);
     const gMonth=gastos.filter(x=>Number(x.mes)===m&&Number(x.anio||y)===y);
     labels.push(MESES[m].substring(0,3));
-    receivedData.push(iMonth.reduce((a,x)=>a+incomeReceivedAmount(x),0));
+    receivedData.push(incomeReceivedForMonth(m,y));
     expectedData.push(iMonth.reduce((a,x)=>a+x.monto,0));
     gData.push(gMonth.reduce((a,x)=>a+x.monto,0));
   }
@@ -1465,7 +1515,7 @@ function aggregateTrend(period){
   return trendPeriods(period).map(p=>{
     const incomeItems=ingresos.filter(x=>{const d=recordDate(x);return d>=p.from&&d<p.to;});
     const ingresoEsperado=incomeItems.reduce((sum,x)=>sum+(x.monto||0),0);
-    const ingresoRecibido=incomeItems.reduce((sum,x)=>sum+incomeReceivedAmount(x),0);
+    const ingresoRecibido=ingresos.reduce((sum,x)=>sum+incomeReceivedInPeriod(x,p.from,p.to),0);
     const gasto=gastos.reduce((sum,x)=>{const d=recordDate(x);return d>=p.from&&d<p.to?sum+(x.monto||0):sum;},0);
     return{...p,ingresoRecibido,ingresoEsperado,gasto,balance:ingresoRecibido-gasto,rate:ingresoRecibido>0?Math.round(gasto/ingresoRecibido*100):0};
   });
@@ -1541,7 +1591,21 @@ function renderTrends(){
 function renderTimeline(iM,gM){
   const el=document.getElementById('timeline-list');
   const evs=[];
-  iM.filter(i=>i.dia).forEach(i=>evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,receivedAmount:incomeReceivedAmount(i),pendingAmount:incomePendingAmount(i),kind:'ing',received:incomeIsReceived(i)}));
+  abonosIngresos.forEach(a=>{
+    const d=abonoDate(a);
+    if(!d||d.getMonth()!==mesVista||d.getFullYear()!==anioVista)return;
+    const i=ingresos.find(x=>incomeKey(x)===String(a.ingresoId||''));
+    evs.push({dia:d.getDate(),desc:(i?(i.desc+(i.quien?' · '+i.quien:'')):'Ingreso')+' · abono',monto:Number(a.monto)||0,receivedAmount:Number(a.monto)||0,pendingAmount:i?incomePendingAmount(i):0,kind:'ing',received:true});
+  });
+  iM.filter(i=>i.dia).forEach(i=>{
+    const hasAbonos=incomeAbonos(i).length>0;
+    const pending=incomePendingAmount(i);
+    if(!hasAbonos&&incomeIsReceived(i)){
+      evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:i.monto,receivedAmount:incomeReceivedAmount(i),pendingAmount:0,kind:'ing',received:true});
+    }else if(pending>0){
+      evs.push({dia:i.dia,desc:i.desc+(i.quien?' · '+i.quien:''),monto:pending,receivedAmount:0,pendingAmount:pending,kind:'ing-pending',received:false});
+    }
+  });
   gM.filter(g=>g.dia).forEach(g=>evs.push({dia:g.dia,desc:g.desc,monto:g.monto,kind:g.tipo==='indispensable'?'ind':'nind',cat:g.cat}));
   recsForVisibleMonth().forEach(r=>evs.push({dia:r.dia,desc:r.desc,monto:r.monto,kind:'rec'}));
   if(!evs.length){el.innerHTML='<div class="empty">Agrega registros con día asignado para ver el flujo</div>';return;}
@@ -1551,9 +1615,9 @@ function renderTimeline(iM,gM){
     const its=byDay[d];const past=d<DIA_HOY,today=d===DIA_HOY;
     const dc=today?'var(--blue)':past?'var(--muted)':'var(--green)';
     const dbg=today?'var(--blue-bg)':past?'rgba(0,0,0,.04)':'var(--green-bg)';
-    its.forEach(e=>bal+=e.kind==='ing'?(e.receivedAmount||0):e.kind==='rec'?0:-e.monto);
+    its.forEach(e=>bal+=e.kind==='ing'?(e.receivedAmount||0):(e.kind==='ing-pending'||e.kind==='rec')?0:-e.monto);
     const bc=bal>=0?'var(--green)':'var(--red)';
-    return`<div class="tl-item"><div class="tl-day" style="background:${dbg};color:${dc}">${d}</div><div class="tl-body"><div class="tl-lbl">${today?'Hoy':past?'Día '+d+' (pasado)':'Día '+d}</div>${its.map(e=>{const partial=e.kind==='ing'&&e.receivedAmount>0&&!e.received;const tc=e.kind==='ing'?(e.received?'var(--green)':partial?'var(--amber)':'var(--blue)'):e.kind==='ind'?'var(--red)':'var(--amber)';const s=e.kind==='ing'?(e.received?'+':partial?'parcial +':'por recibir '):e.kind==='rec'?'apartar ':'-';const amt=e.kind==='ing'?(e.receivedAmount>0?e.receivedAmount:e.monto):e.monto;const meta=e.kind==='rec'?' <span style="font-size:11px;color:var(--muted)">(fijo)</span>':partial?` <span style="font-size:11px;color:var(--muted)">(${fmt(e.pendingAmount)} pendiente)</span>`:e.kind==='ing'&&!e.received?' <span style="font-size:11px;color:var(--muted)">(pendiente)</span>':'';return`<div class="tl-row"><span class="tl-desc" style="color:${tc}">${h(e.desc)}${meta}</span><span class="tl-amt" style="color:${tc}">${s}${fmt(amt)}</span></div>`;}).join('')}<div class="tl-bal">Saldo real acumulado: <span style="color:${bc};font-weight:600">${fmt(bal)}</span></div></div></div>`;
+    return`<div class="tl-item"><div class="tl-day" style="background:${dbg};color:${dc}">${d}</div><div class="tl-body"><div class="tl-lbl">${today?'Hoy':past?'Día '+d+' (pasado)':'Día '+d}</div>${its.map(e=>{const pending=e.kind==='ing-pending';const tc=e.kind==='ing'?'var(--green)':pending?'var(--blue)':e.kind==='ind'?'var(--red)':'var(--amber)';const s=e.kind==='ing'?'+':pending?'por recibir ':e.kind==='rec'?'apartar ':'-';const amt=e.kind==='ing'?(e.receivedAmount||e.monto):e.monto;const meta=e.kind==='rec'?' <span style="font-size:11px;color:var(--muted)">(fijo)</span>':pending?' <span style="font-size:11px;color:var(--muted)">(pendiente)</span>':e.kind==='ing'&&e.pendingAmount>0?` <span style="font-size:11px;color:var(--muted)">(${fmt(e.pendingAmount)} pendiente)</span>`:'';return`<div class="tl-row"><span class="tl-desc" style="color:${tc}">${h(e.desc)}${meta}</span><span class="tl-amt" style="color:${tc}">${s}${fmt(amt)}</span></div>`;}).join('')}<div class="tl-bal">Saldo real acumulado: <span style="color:${bc};font-weight:600">${fmt(bal)}</span></div></div></div>`;
   }).join('');
 }
 
@@ -1662,7 +1726,7 @@ function actualizarMeta(tI,tG){
   const el=document.getElementById('meta-prog');if(!el)return;
   const iM=ingresos.filter(itemIsVisibleMonth);
   const gM=gastos.filter(itemIsVisibleMonth);
-  const ti=tI!==undefined?tI:iM.reduce((a,x)=>a+incomeReceivedAmount(x),0);
+  const ti=tI!==undefined?tI:incomeReceivedForMonth(mesVista,anioVista);
   const tg=tG!==undefined?tG:gM.reduce((a,x)=>a+x.monto,0);
   const bal=ti-tg;
   if(!meta){document.getElementById('meta-fill').style.width='0%';document.getElementById('meta-actual').textContent=fmt(bal)+' ahorrado';document.getElementById('meta-objetivo').textContent='Meta: $0';document.getElementById('meta-pct-badge').textContent='0%';return;}
