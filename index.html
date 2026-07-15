@@ -1697,6 +1697,11 @@ function renderListaRecs(){
     else if(recIsApartado(r))buckets.apartado.items.push(r);
     else buckets.pendiente.items.push(r);
   });
+  const sortByDay=(a,b)=>(Number(a.dia||99)-Number(b.dia||99))||String(a.desc||'').localeCompare(String(b.desc||''),'es');
+  buckets.pendiente.items.sort(sortByDay);
+  buckets.apartado.items.sort(sortByDay);
+  buckets.pagado.items.sort(sortByDay);
+  offMonth.sort(sortByDay);
   const renderCard=(r,state)=>{
     const id=Number(r.id)||0;
     const diff=r.dia-DIA_HOY;
